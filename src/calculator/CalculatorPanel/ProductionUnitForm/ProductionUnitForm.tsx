@@ -6,6 +6,8 @@ import { Select, SelectItem } from "@heroui/select";
 
 import { ProductionUnitFormProps } from "./ProductionUnitForm.types";
 import { ProductionUnitFormValues } from "../../calculatorService.types";
+import { UnitTranslations } from "@/constants";
+import { Unit } from "@/calculator/calculatorService.api";
 
 export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   priceList,
@@ -31,36 +33,64 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   return (
     <form
       onSubmit={formik.handleSubmit}
-      className="w-full max-w-2xl mx-auto p-6 space-y-6"
+      className="w-full max-w-2xl mx-auto p-6 space-y-4"
     >
       {/* размеры */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* количество */}
         <Input
           label="Количество"
-          type="number"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={formik.values.amount.toString()}
-          onChange={(e) =>
-            formik.setFieldValue("amount", parseInt(e.target.value) || 0)
-          }
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, "");
+            formik.setFieldValue("amount", value ? Number(value) : 0);
+          }}
         />
 
         <Input
           label="Ширина (м)"
-          type="number"
+          type="text"
+          placeholder="Введите ширину"
           value={formik.values.width.toString()}
-          onChange={(e) =>
-            formik.setFieldValue("width", parseFloat(e.target.value) || 0)
-          }
+          onChange={(e) => {
+            // разрешаем цифры и точку
+            const val = e.target.value.replace(/[^0-9.]/g, "");
+
+            // проверяем, чтобы было не более одной точки
+            const parts = val.split(".");
+            const sanitized =
+              parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : val;
+
+            // преобразуем в число
+            const numberValue = parseFloat(sanitized);
+
+            // обновляем Formik, 0 если пусто или отрицательное
+            formik.setFieldValue(
+              "width",
+              isNaN(numberValue) || numberValue < 0 ? "" : numberValue,
+            );
+          }}
         />
 
         <Input
           label="Высота (м)"
-          type="number"
+          type="text"
+          placeholder="Введите высоту"
           value={formik.values.height.toString()}
-          onChange={(e) =>
-            formik.setFieldValue("height", parseFloat(e.target.value) || 0)
-          }
+          onChange={(e) => {
+            const val = e.target.value.replace(/[^0-9.]/g, "");
+            const parts = val.split(".");
+            const sanitized =
+              parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : val;
+            const numberValue = parseFloat(sanitized);
+
+            formik.setFieldValue(
+              "height",
+              isNaN(numberValue) || numberValue < 0 ? "" : numberValue,
+            );
+          }}
         />
       </div>
 
@@ -80,7 +110,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             }}
           >
             {materialGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}/${item.unit})`;
+              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})`;
 
               return (
                 <SelectItem key={item.id} textValue={label}>
@@ -103,7 +133,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             }}
           >
             {cuttingGroup.items.map((item) => {
-              const label = `${item.name} (${item.price} ${item.unit})`;
+              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})`;
 
               return (
                 <SelectItem key={item.id} textValue={label}>
@@ -126,7 +156,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             }}
           >
             {printGroup.items.map((item) => {
-              const label = `${item.name} (${item.price} ${item.unit})`;
+              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})`;
 
               return (
                 <SelectItem key={item.id} textValue={label}>
