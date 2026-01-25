@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Card, CardBody } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 
 import { CalculationResult } from "../../calculatorService.utils";
