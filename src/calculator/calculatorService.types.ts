@@ -3,7 +3,7 @@ export interface PriceItem {
   name: string;
   price: number;
   unit: string;
-  minCost: number;
+  minCost?: number;
 }
 
 export interface PriceGroup {
@@ -18,6 +18,6 @@ export type ProductionUnitFormValues = {
   material: string; // id
   cutting: string; // id
   print: string; // id
-  height: number;
-  width: number;
+  height: string;
+  width: string;
 };

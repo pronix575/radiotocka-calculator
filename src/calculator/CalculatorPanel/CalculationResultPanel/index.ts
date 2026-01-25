@@ -1,0 +1,1 @@
+export { CalculationResultPanel } from "./CalculationResultPanel";
