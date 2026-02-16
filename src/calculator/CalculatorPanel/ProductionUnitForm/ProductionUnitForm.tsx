@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -14,7 +14,10 @@ import {
 
 import { validationSchema } from "./ProductionUnitForm.constatns";
 import { ProductionUnitFormProps } from "./ProductionUnitForm.types";
-import { MeasurementUnitsTranslate } from "@/calculator/calculatorService.constants";
+import {
+  MeasurementUnitsToCoefficient,
+  MeasurementUnitsTranslate,
+} from "@/calculator/calculatorService.constants";
 
 export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   priceList,
@@ -30,11 +33,47 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       width: "",
       unit: MeasurementUnits.m,
     },
+    validateOnChange: true,
+    validateOnMount: false,
+    validateOnBlur: false,
     validationSchema,
     onSubmit: (values) => {
       setCalculatingResult(values as ProductionUnitFormValues);
     },
   });
+
+  const prevUnitRef = useRef<MeasurementUnits>(formik.values.unit);
+
+  useEffect(() => {
+    const currentUnit = formik.values.unit;
+    const prevUnit = prevUnitRef.current;
+
+    if (!currentUnit || !prevUnit || currentUnit === prevUnit) {
+      prevUnitRef.current = currentUnit;
+      return;
+    }
+
+    const prevCoef = MeasurementUnitsToCoefficient[prevUnit];
+    const nextCoef = MeasurementUnitsToCoefficient[currentUnit];
+
+    const convert = (value: string) => {
+      if (!value) return "";
+
+      const numeric = Number(value);
+      if (isNaN(numeric)) return "";
+
+      // перевод: текущее значение → в метры → в новую единицу
+      return ((numeric * prevCoef) / nextCoef).toString();
+    };
+
+    formik.setValues({
+      ...formik.values,
+      width: convert(formik.values.width),
+      height: convert(formik.values.height),
+    });
+
+    prevUnitRef.current = currentUnit;
+  }, [formik.values.unit]);
 
   const materialGroup = priceList.find((g) => g.groupName === "Материалы");
   const cuttingGroup = priceList.find((g) => g.groupName === "Резка");
@@ -43,7 +82,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   return (
     <form className="w-full space-y-4" onSubmit={formik.handleSubmit}>
       <div className="flex justify-between items-center">
-        <h1 className="font-semibold text-xl">Расчет стоимости</h1>
+        <h1 className="font-semibold text-[16px]">Расчет стоимости</h1>
 
         <Tabs
           selectedKey={formik.values.unit}
