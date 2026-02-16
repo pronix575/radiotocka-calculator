@@ -22,6 +22,7 @@ import {
 export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   priceList,
   setCalculatingResult,
+  reset,
 }) => {
   const formik = useFormik({
     initialValues: {
@@ -98,22 +99,30 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
 
   return (
     <form className="w-full space-y-4" onSubmit={formik.handleSubmit}>
-      <div className="flex justify-between items-center">
-        <h1 className="font-semibold text-[16px]">Расчет стоимости</h1>
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <h1 className="font-semibold text-[16px] whitespace-nowrap">
+          Расчет стоимости
+        </h1>
 
-        <Tabs
-          selectedKey={formik.values.unit}
-          onSelectionChange={(key) =>
-            formik.setFieldValue("unit", key as MeasurementUnits)
-          }
-        >
-          {Object.values(MeasurementUnits).map((measurementUnit) => (
-            <Tab
-              key={measurementUnit}
-              title={MeasurementUnitsTranslate[measurementUnit]}
-            />
-          ))}
-        </Tabs>
+        <div className="flex gap-2 items-center">
+          <Tabs
+            fullWidth
+            selectedKey={formik.values.unit}
+            onSelectionChange={(key) =>
+              formik.setFieldValue("unit", key as MeasurementUnits)
+            }
+          >
+            {Object.values(MeasurementUnits).map((measurementUnit) => (
+              <Tab
+                key={measurementUnit}
+                title={MeasurementUnitsTranslate[measurementUnit]}
+              />
+            ))}
+          </Tabs>
+          <Button variant="flat" onPress={reset}>
+            Сбросить
+          </Button>
+        </div>
       </div>
 
       {/* размеры */}
@@ -185,7 +194,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             onBlur={() => formik.setFieldTouched("material", true)}
           >
             {materialGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})`;
+              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
               return (
                 <SelectItem key={item.id} textValue={label}>
                   {label}
@@ -212,7 +221,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             onBlur={() => formik.setFieldTouched("cutting", true)}
           >
             {cuttingGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})`;
+              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
               return (
                 <SelectItem key={item.id} textValue={label}>
                   {label}
@@ -239,7 +248,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             onBlur={() => formik.setFieldTouched("print", true)}
           >
             {printGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})`;
+              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
               return (
                 <SelectItem key={item.id} textValue={label}>
                   {label}

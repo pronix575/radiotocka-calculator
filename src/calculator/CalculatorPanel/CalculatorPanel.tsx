@@ -12,6 +12,8 @@ export const CalculatorPanel: FC<CalculatorPanelProps> = ({ priceList }) => {
     null,
   );
 
+  const reset = () => setFormValues(null);
+
   const calculationResult: CalculationResult | null = useMemo(() => {
     if (!formValues) return null;
 
@@ -24,6 +26,7 @@ export const CalculatorPanel: FC<CalculatorPanelProps> = ({ priceList }) => {
         <ProductionUnitForm
           priceList={priceList}
           setCalculatingResult={setFormValues}
+          reset={reset}
         />
       </div>
       <div className="w-full md:w-80">

@@ -6,4 +6,5 @@ import {
 export type ProductionUnitFormProps = {
   priceList: PriceList;
   setCalculatingResult: (result: ProductionUnitFormValues | null) => void;
+  reset: () => void;
 };
