@@ -3,15 +3,18 @@ import { useFormik } from "formik";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
+import { Tabs, Tab } from "@heroui/tabs";
 
 import { UnitTranslations } from "@/constants";
 import {
+  MeasurementUnits,
   ProductionUnitFormValues,
   Unit,
 } from "@/calculator/calculatorService.types";
 
 import { validationSchema } from "./ProductionUnitForm.constatns";
 import { ProductionUnitFormProps } from "./ProductionUnitForm.types";
+import { MeasurementUnitsTranslate } from "@/calculator/calculatorService.constants";
 
 export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   priceList,
@@ -38,6 +41,19 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
 
   return (
     <form className="w-full space-y-4" onSubmit={formik.handleSubmit}>
+      <div className="flex justify-between items-center">
+        <h1 className="font-semibold text-xl">Расчет единицы продукции</h1>
+
+        <Tabs>
+          {Object.values(MeasurementUnits).map((measurementUnit) => (
+            <Tab
+              key={measurementUnit}
+              title={MeasurementUnitsTranslate[measurementUnit]}
+            />
+          ))}
+        </Tabs>
+      </div>
+
       {/* размеры */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* количество */}
@@ -172,7 +188,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         )}
       </div>
 
-      <Button color="primary" type="submit" className="w-full">
+      <Button color="primary" type="submit" className="w-full" size="lg">
         Рассчитать
       </Button>
     </form>

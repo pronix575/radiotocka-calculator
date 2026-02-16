@@ -15,7 +15,9 @@ export const CalculatorContainer = () => {
         const data = await getPriceList();
         setPriceList(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch price list");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch price list",
+        );
       } finally {
         setIsLoading(false);
       }
