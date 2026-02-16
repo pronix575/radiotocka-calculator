@@ -37,18 +37,19 @@ export const CalculatorContainer = () => {
 };
 
 const skeleton = (
-  <div className="flex flex-col justify-center max-w-6xl mx-auto gap-0 md:flex-row md:gap-x-4">
+  <div className="flex flex-col max-w-6xl mx-auto md:flex-row md:gap-6 p-4">
+    {/* Левая часть */}
     <div className="w-full md:flex-1">
-      <div className="p-6 space-y-3">
+      <div className="space-y-5">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <Skeleton className="h-6 w-1/3 rounded-lg bg-default-300" />
+          <Skeleton className="h-6 w-1/3 rounded-md bg-default-400" />
 
           <div className="flex gap-1 bg-default-200 p-1 rounded-xl">
             {[...Array(4)].map((_, i) => (
               <Skeleton
                 key={i}
-                className={`h-6 w-8 rounded-lg ${
+                className={`h-6 w-8 rounded-md ${
                   i === 0 ? "bg-default-400" : "bg-default-300"
                 }`}
               />
@@ -57,33 +58,53 @@ const skeleton = (
         </div>
 
         {/* Blocks */}
-        <div className="space-y-2">
-          <Skeleton className="h-14 w-full rounded-2xl bg-default-300" />
+        <div className="space-y-3">
+          {/* Количество */}
+          <Skeleton className="h-14 w-full rounded-xl bg-default-300" />
 
-          {[...Array(3)].map((_, i) => (
+          {/* Inputs */}
+          {[...Array(2)].map((_, i) => (
             <div
               key={i}
-              className="h-16 w-full rounded-2xl bg-default-200 flex items-center justify-between px-4"
+              className="h-16 w-full rounded-xl bg-default-200 flex items-center justify-between px-4"
             >
-              <div className="space-y-2 w-full">
-                <Skeleton className="h-3 w-1/3 rounded-lg bg-default-300" />
-                <Skeleton className="h-4 w-2/3 rounded-lg bg-default-400" />
+              <div className="space-y-1.5 w-full">
+                <Skeleton className="h-3 w-1/4 rounded-md bg-default-300" />
+                <Skeleton className="h-4 w-1/2 rounded-md bg-default-400" />
               </div>
-              <Skeleton className="h-4 w-6 rounded-lg bg-default-300" />
+              <Skeleton className="h-4 w-6 rounded-md bg-default-300" />
+            </div>
+          ))}
+
+          {/* Selects */}
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={`select-${i}`}
+              className="h-16 w-full rounded-xl bg-default-200 flex items-center justify-between px-4"
+            >
+              <div className="space-y-1.5 w-full">
+                <Skeleton className="h-3 w-1/3 rounded-md bg-default-300" />
+                <Skeleton className="h-4 w-2/3 rounded-md bg-default-400" />
+              </div>
+              <Skeleton className="h-4 w-4 rounded-md bg-default-300" />
             </div>
           ))}
         </div>
 
-        <Skeleton className="h-14 w-full rounded-2xl bg-default-400" />
+        {/* Button */}
+        <Skeleton className="h-14 w-full rounded-xl bg-default-400" />
 
-        <div className="flex justify-center">
-          <Skeleton className="h-4 w-3/4 rounded-lg bg-default-300" />
+        {/* Footer */}
+        <div className="flex justify-center pt-1">
+          <Skeleton className="h-4 w-2/3 rounded-md bg-default-300" />
         </div>
       </div>
     </div>
-    <div className="p-3 w-full md:w-80 hidden md:block">
-      <div className="p-3 rounded-2xl border border-default-300 space-y-5">
-        {/* Верхний блок */}
+
+    {/* Правая панель */}
+    <div className="hidden md:block w-full md:w-80">
+      <div className="p-4 rounded-2xl border border-default-300 space-y-5">
+        {/* Верх */}
         <div className="space-y-3">
           {[...Array(2)].map((_, i) => (
             <div key={i} className="flex justify-between items-center">
@@ -93,10 +114,9 @@ const skeleton = (
           ))}
         </div>
 
-        {/* Divider */}
-        <div className="h-px w-full bg-default-300" />
+        <div className="h-px bg-default-300" />
 
-        {/* Средний блок */}
+        {/* Средний */}
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex justify-between items-center">
@@ -106,12 +126,11 @@ const skeleton = (
           ))}
         </div>
 
-        {/* Divider */}
-        <div className="h-px w-full bg-default-300" />
+        <div className="h-px bg-default-300" />
 
         {/* Итог */}
-        <div className="flex justify-between items-center pt-2">
-          <Skeleton className="h-6 w-1/4 rounded-md bg-default-400" />
+        <div className="flex justify-between items-center pt-1">
+          <Skeleton className="h-5 w-1/4 rounded-md bg-default-400" />
           <Skeleton className="h-8 w-1/3 rounded-lg bg-primary/40" />
         </div>
       </div>
