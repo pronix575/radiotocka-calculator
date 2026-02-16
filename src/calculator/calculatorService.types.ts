@@ -7,6 +7,7 @@ export type ProductionUnitFormValues = {
   print: string; // id
   height: string;
   width: string;
+  unit: MeasurementUnits;
 };
 
 export enum Unit {

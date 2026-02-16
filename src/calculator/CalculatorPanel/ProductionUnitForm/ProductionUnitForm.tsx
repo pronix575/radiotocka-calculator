@@ -28,6 +28,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       print: "",
       height: "",
       width: "",
+      unit: MeasurementUnits.m,
     },
     validationSchema,
     onSubmit: (values) => {
@@ -42,9 +43,14 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   return (
     <form className="w-full space-y-4" onSubmit={formik.handleSubmit}>
       <div className="flex justify-between items-center">
-        <h1 className="font-semibold text-xl">Расчет единицы продукции</h1>
+        <h1 className="font-semibold text-xl">Расчет стоимости</h1>
 
-        <Tabs>
+        <Tabs
+          selectedKey={formik.values.unit}
+          onSelectionChange={(key) =>
+            formik.setFieldValue("unit", key as MeasurementUnits)
+          }
+        >
           {Object.values(MeasurementUnits).map((measurementUnit) => (
             <Tab
               key={measurementUnit}
@@ -81,7 +87,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           name="width"
-          endContent="м"
+          endContent={MeasurementUnitsTranslate[formik.values.unit]}
           isInvalid={!!(formik.touched.width && formik.errors.width)}
           errorMessage={formik.touched.width ? formik.errors.width : undefined}
         />
@@ -94,7 +100,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           name="height"
-          endContent="м"
+          endContent={MeasurementUnitsTranslate[formik.values.unit]}
           isInvalid={!!(formik.touched.height && formik.errors.height)}
           errorMessage={
             formik.touched.height ? formik.errors.height : undefined
