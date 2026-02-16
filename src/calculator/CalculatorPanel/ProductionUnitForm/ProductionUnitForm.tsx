@@ -4,11 +4,14 @@ import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 
-import { ProductionUnitFormProps } from "./ProductionUnitForm.types";
 import { UnitTranslations } from "@/constants";
-import { Unit } from "@/calculator/calculatorService.api";
+import {
+  ProductionUnitFormValues,
+  Unit,
+} from "@/calculator/calculatorService.types";
+
 import { validationSchema } from "./ProductionUnitForm.constatns";
-import { ProductionUnitFormValues } from "@/calculator/calculatorService.types";
+import { ProductionUnitFormProps } from "./ProductionUnitForm.types";
 
 export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   priceList,
@@ -34,7 +37,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   const printGroup = priceList.find((g) => g.groupName === "Печать");
 
   return (
-    <div className="w-full space-y-4">
+    <form className="w-full space-y-4" onSubmit={formik.handleSubmit}>
       {/* размеры */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* количество */}
@@ -169,14 +172,9 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         )}
       </div>
 
-      <Button
-        color="primary"
-        type="submit"
-        className="w-full"
-        onPress={() => formik.handleSubmit()}
-      >
+      <Button color="primary" type="submit" className="w-full">
         Рассчитать
       </Button>
-    </div>
+    </form>
   );
 };

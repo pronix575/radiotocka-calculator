@@ -1,23 +1,4 @@
-export enum Unit {
-  M = "m",
-  M2 = "m2",
-  M3 = "m3",
-  Wage = "wage",
-  Unit = "unit",
-}
-
-interface PriceItem {
-  id: string;
-  name: string;
-  price: number;
-  unit: Unit;
-  minCost?: number;
-}
-
-interface PriceGroup {
-  groupName: string;
-  items: PriceItem[];
-}
+import { PriceGroup, Unit } from "./calculatorService.types";
 
 const mockPriceList: PriceGroup[] = [
   {
