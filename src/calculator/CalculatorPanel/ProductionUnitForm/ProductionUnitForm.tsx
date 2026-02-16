@@ -38,7 +38,24 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
     validateOnBlur: false,
     validationSchema,
     onSubmit: (values) => {
-      setCalculatingResult(values as ProductionUnitFormValues);
+      const coef = MeasurementUnitsToCoefficient[values.unit];
+
+      const toMeters = (value: string) => {
+        const numeric = Number(value);
+
+        if (isNaN(numeric)) return 0;
+
+        return numeric * coef;
+      };
+
+      const normalizedValues: ProductionUnitFormValues = {
+        ...values,
+        amount: values.amount ?? 0,
+        width: toMeters(values.width).toString(),
+        height: toMeters(values.height).toString(),
+      };
+
+      setCalculatingResult(normalizedValues);
     },
   });
 

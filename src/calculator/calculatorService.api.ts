@@ -64,7 +64,7 @@ export const getPriceList = async () => {
           ok: true,
           json: () => Promise.resolve(mockPriceList),
         } as Response),
-      500,
+      50000,
     ),
   )) as Response;
 
