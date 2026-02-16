@@ -6,7 +6,20 @@ export enum Unit {
   Unit = "unit",
 }
 
-const mockPriceList = [
+interface PriceItem {
+  id: string;
+  name: string;
+  price: number;
+  unit: Unit;
+  minCost?: number;
+}
+
+interface PriceGroup {
+  groupName: string;
+  items: PriceItem[];
+}
+
+const mockPriceList: PriceGroup[] = [
   {
     groupName: "Материалы",
     items: [
@@ -73,8 +86,10 @@ export const getPriceList = async () => {
       500,
     ),
   )) as Response;
+
   if (!response.ok) {
     throw new Error("Failed to fetch price list");
   }
+
   return response.json();
 };
