@@ -1,4 +1,4 @@
-import { Unit } from "@/calculator/calculatorService.api";
+import { Unit } from "@/calculator/calculatorService.types";
 
 export const UnitTranslations: { [key in Unit]: string } = {
   [Unit.M]: "м",

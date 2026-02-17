@@ -1,12 +1,6 @@
-export enum Unit {
-  M = "m",
-  M2 = "m2",
-  M3 = "m3",
-  Wage = "wage",
-  Unit = "unit",
-}
+import { PriceGroup, Unit } from "./calculatorService.types";
 
-const mockPriceList = [
+const mockPriceList: PriceGroup[] = [
   {
     groupName: "Материалы",
     items: [
@@ -70,11 +64,13 @@ export const getPriceList = async () => {
           ok: true,
           json: () => Promise.resolve(mockPriceList),
         } as Response),
-      500,
+      1000,
     ),
   )) as Response;
+
   if (!response.ok) {
     throw new Error("Failed to fetch price list");
   }
+
   return response.json();
 };

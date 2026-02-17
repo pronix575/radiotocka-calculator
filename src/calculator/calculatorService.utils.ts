@@ -1,4 +1,8 @@
-import { PriceList, ProductionUnitFormValues } from "./calculatorService.types";
+import {
+  PriceItem,
+  PriceList,
+  ProductionUnitFormValues,
+} from "./calculatorService.types";
 
 export interface CalculationResult {
   totalArea: number;
@@ -7,6 +11,9 @@ export interface CalculationResult {
   printPrice: number;
   cuttingPrice: number;
   totalPrice: number;
+  materialCost: number;
+  printCost: number;
+  cuttingCost: number;
 }
 
 export const calculateResult = (
@@ -23,34 +30,48 @@ export const calculateResult = (
     return null;
 
   // Получаем цены из priceList
-  let materialPrice = 0;
-  let printPrice = 0;
-  let cuttingPrice = 0;
+  let materialItem: PriceItem | null = null;
+  let printItem: PriceItem | null = null;
+  let cuttingItem: PriceItem | null = null;
 
   for (const group of priceList) {
     for (const item of group.items) {
-      if (item.id === formValues.material) materialPrice = item.price;
-      if (item.id === formValues.print) printPrice = item.price;
-      if (item.id === formValues.cutting) cuttingPrice = item.price;
+      if (item.id === formValues.material) materialItem = item;
+      if (item.id === formValues.print) printItem = item;
+      if (item.id === formValues.cutting) cuttingItem = item;
     }
   }
 
-  // Расчеты
+  if (!materialItem || !printItem || !cuttingItem) return null;
+
+  const materialPrice = materialItem.price;
+  const printPrice = printItem.price;
+  const cuttingPrice = cuttingItem.price;
+
   const adjustedWidth = width + 0.03;
   const adjustedHeight = height + 0.03;
 
-  // площадь общая = кол-во * ((ширина + 0.03) * (высота + 0.03))
+  // Общая площадь
   let totalArea = amount * adjustedWidth * adjustedHeight;
-
-  // округляем вверх до сотых
   totalArea = Math.ceil(totalArea * 100) / 100;
 
-  // периметр общий = кол-во * ((ширина + высота) * 2)
+  // Общий периметр
   const totalPerimeter = Math.ceil(amount * ((width + height) * 2));
 
-  // цена общая = площадь общая * (цена материала + цена печати) + периметер общий * цена резки
-  const totalPrice =
-    totalArea * (materialPrice + printPrice) + totalPerimeter * cuttingPrice;
+  // Цена по компонентам
+  let materialCost = totalArea * materialPrice;
+  let printCost = totalArea * printPrice;
+  let cuttingCost = totalPerimeter * cuttingPrice;
+
+  // Применяем минимальную стоимость для каждой услуги
+  if (materialItem.minCost !== undefined)
+    materialCost = Math.max(materialCost, materialItem.minCost);
+  if (printItem.minCost !== undefined)
+    printCost = Math.max(printCost, printItem.minCost);
+  if (cuttingItem.minCost !== undefined)
+    cuttingCost = Math.max(cuttingCost, cuttingItem.minCost);
+
+  const totalPrice = materialCost + printCost + cuttingCost;
 
   return {
     totalArea,
@@ -59,5 +80,8 @@ export const calculateResult = (
     printPrice,
     cuttingPrice,
     totalPrice,
+    printCost,
+    cuttingCost,
+    materialCost,
   };
 };

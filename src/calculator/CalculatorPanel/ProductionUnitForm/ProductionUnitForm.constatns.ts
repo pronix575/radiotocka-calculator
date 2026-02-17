@@ -1,3 +1,5 @@
+import { MeasurementUnitsToCoefficient } from "@/calculator/calculatorService.constants";
+import { MeasurementUnits } from "@/calculator/calculatorService.types";
 import * as yup from "yup";
 
 export const validationSchema = yup.object({
@@ -14,16 +16,24 @@ export const validationSchema = yup.object({
     .test(
       "is-positive-number",
       "Ширина должна быть числом больше 0",
-      (value) => {
+      (value, ctx) => {
         if (!value) return false; // пустая строка
+        const unit: MeasurementUnits = ctx.options.context?.unit;
         const numberValue = parseFloat(value.replace(",", "."));
-        return !isNaN(numberValue) && numberValue > 0;
+
+        const computedValue = MeasurementUnitsToCoefficient[unit] * numberValue;
+
+        return !isNaN(computedValue) && computedValue > 0;
       },
     )
-    .test("max-width", "Ширина не должна превышать 3 м", (value) => {
+    .test("max-width", "Ширина не должна превышать 3 м", (value, ctx) => {
       if (!value) return true; // другая валидация уже обработает пустое
+      const unit: MeasurementUnits = ctx.options.context?.unit;
+
       const numberValue = parseFloat(value.replace(",", "."));
-      return numberValue <= 3;
+
+      const computedValue = MeasurementUnitsToCoefficient[unit] * numberValue;
+      return computedValue <= 3;
     }),
 
   height: yup
@@ -32,16 +42,20 @@ export const validationSchema = yup.object({
     .test(
       "is-positive-number",
       "Высота должна быть числом больше 0",
-      (value) => {
+      (value, ctx) => {
         if (!value) return false;
+        const unit: MeasurementUnits = ctx.options.context?.unit;
         const numberValue = parseFloat(value.replace(",", "."));
-        return !isNaN(numberValue) && numberValue > 0;
+        const computedValue = MeasurementUnitsToCoefficient[unit] * numberValue;
+        return !isNaN(computedValue) && computedValue > 0;
       },
     )
-    .test("max-height", "Высота не должна превышать 2 м", (value) => {
+    .test("max-height", "Высота не должна превышать 2 м", (value, ctx) => {
       if (!value) return true;
+      const unit: MeasurementUnits = ctx.options.context?.unit;
       const numberValue = parseFloat(value.replace(",", "."));
-      return numberValue <= 2;
+      const computedValue = MeasurementUnitsToCoefficient[unit] * numberValue;
+      return computedValue <= 2;
     }),
 
   material: yup.string().required("Выберите материал"),

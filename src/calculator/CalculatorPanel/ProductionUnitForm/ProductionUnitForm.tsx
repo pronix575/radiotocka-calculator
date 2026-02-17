@@ -1,18 +1,28 @@
-import { FC } from "react";
+import { FC, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
+import { Tabs, Tab } from "@heroui/tabs";
 
-import { ProductionUnitFormProps } from "./ProductionUnitForm.types";
 import { UnitTranslations } from "@/constants";
-import { Unit } from "@/calculator/calculatorService.api";
+import {
+  MeasurementUnits,
+  ProductionUnitFormValues,
+  Unit,
+} from "@/calculator/calculatorService.types";
+
 import { validationSchema } from "./ProductionUnitForm.constatns";
-import { ProductionUnitFormValues } from "@/calculator/calculatorService.types";
+import { ProductionUnitFormProps } from "./ProductionUnitForm.types";
+import {
+  MeasurementUnitsToCoefficient,
+  MeasurementUnitsTranslate,
+} from "@/calculator/calculatorService.constants";
 
 export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   priceList,
   setCalculatingResult,
+  reset,
 }) => {
   const formik = useFormik({
     initialValues: {
@@ -22,19 +32,99 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       print: "",
       height: "",
       width: "",
+      unit: MeasurementUnits.m,
     },
+    validateOnChange: true,
+    validateOnMount: false,
+    validateOnBlur: false,
     validationSchema,
     onSubmit: (values) => {
-      setCalculatingResult(values as ProductionUnitFormValues);
+      const coef = MeasurementUnitsToCoefficient[values.unit];
+
+      const toMeters = (value: string) => {
+        const numeric = Number(value);
+
+        if (isNaN(numeric)) return 0;
+
+        return numeric * coef;
+      };
+
+      const normalizedValues: ProductionUnitFormValues = {
+        ...values,
+        amount: values.amount ?? 0,
+        width: toMeters(values.width).toString(),
+        height: toMeters(values.height).toString(),
+      };
+
+      setCalculatingResult(normalizedValues);
     },
   });
+
+  const prevUnitRef = useRef<MeasurementUnits>(formik.values.unit);
+
+  useEffect(() => {
+    const currentUnit = formik.values.unit;
+    const prevUnit = prevUnitRef.current;
+
+    if (!currentUnit || !prevUnit || currentUnit === prevUnit) {
+      prevUnitRef.current = currentUnit;
+      return;
+    }
+
+    const prevCoef = MeasurementUnitsToCoefficient[prevUnit];
+    const nextCoef = MeasurementUnitsToCoefficient[currentUnit];
+
+    const convert = (value: string) => {
+      if (!value) return "";
+
+      const numeric = Number(value);
+      if (isNaN(numeric)) return "";
+
+      // перевод: текущее значение → в метры → в новую единицу
+      return ((numeric * prevCoef) / nextCoef).toString();
+    };
+
+    formik.setValues({
+      ...formik.values,
+      width: convert(formik.values.width),
+      height: convert(formik.values.height),
+    });
+
+    prevUnitRef.current = currentUnit;
+  }, [formik.values.unit]);
 
   const materialGroup = priceList.find((g) => g.groupName === "Материалы");
   const cuttingGroup = priceList.find((g) => g.groupName === "Резка");
   const printGroup = priceList.find((g) => g.groupName === "Печать");
 
   return (
-    <div className="w-full space-y-4">
+    <form className="w-full space-y-4" onSubmit={formik.handleSubmit}>
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <h1 className="font-semibold text-[16px] whitespace-nowrap">
+          Расчет стоимости
+        </h1>
+
+        <div className="flex gap-2 items-center">
+          <Tabs
+            fullWidth
+            selectedKey={formik.values.unit}
+            onSelectionChange={(key) =>
+              formik.setFieldValue("unit", key as MeasurementUnits)
+            }
+          >
+            {Object.values(MeasurementUnits).map((measurementUnit) => (
+              <Tab
+                key={measurementUnit}
+                title={MeasurementUnitsTranslate[measurementUnit]}
+              />
+            ))}
+          </Tabs>
+          <Button variant="flat" onPress={reset}>
+            Сбросить
+          </Button>
+        </div>
+      </div>
+
       {/* размеры */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* количество */}
@@ -62,7 +152,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           name="width"
-          endContent="м"
+          endContent={MeasurementUnitsTranslate[formik.values.unit]}
           isInvalid={!!(formik.touched.width && formik.errors.width)}
           errorMessage={formik.touched.width ? formik.errors.width : undefined}
         />
@@ -75,7 +165,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           name="height"
-          endContent="м"
+          endContent={MeasurementUnitsTranslate[formik.values.unit]}
           isInvalid={!!(formik.touched.height && formik.errors.height)}
           errorMessage={
             formik.touched.height ? formik.errors.height : undefined
@@ -104,7 +194,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             onBlur={() => formik.setFieldTouched("material", true)}
           >
             {materialGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})`;
+              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
               return (
                 <SelectItem key={item.id} textValue={label}>
                   {label}
@@ -131,7 +221,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             onBlur={() => formik.setFieldTouched("cutting", true)}
           >
             {cuttingGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})`;
+              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
               return (
                 <SelectItem key={item.id} textValue={label}>
                   {label}
@@ -158,7 +248,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             onBlur={() => formik.setFieldTouched("print", true)}
           >
             {printGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})`;
+              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
               return (
                 <SelectItem key={item.id} textValue={label}>
                   {label}
@@ -169,14 +259,9 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         )}
       </div>
 
-      <Button
-        color="primary"
-        type="submit"
-        className="w-full"
-        onPress={() => formik.handleSubmit()}
-      >
+      <Button color="primary" type="submit" className="w-full" size="lg">
         Рассчитать
       </Button>
-    </div>
+    </form>
   );
 };
