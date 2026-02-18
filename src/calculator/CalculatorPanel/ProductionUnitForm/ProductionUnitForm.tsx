@@ -81,7 +81,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       if (isNaN(numeric)) return "";
 
       // перевод: текущее значение → в метры → в новую единицу
-      return ((numeric * prevCoef) / nextCoef).toString();
+      return ((numeric * prevCoef) / nextCoef).toFixed(2).toString();
     };
 
     formik.setValues({
