@@ -559,6 +559,14 @@
     "@heroui/system" "2.4.25"
     "@heroui/use-measure" "2.1.8"
 
+"@heroui/framer-utils@2.1.27":
+  version "2.1.27"
+  resolved "https://registry.yarnpkg.com/@heroui/framer-utils/-/framer-utils-2.1.27.tgz#08342a23f88d7743877fb1e36b86d0ead377bdcf"
+  integrity sha512-JKFu9xVhw9grtLKNVrCkEA4ZD0fBOOLGs2mYS2C82GnZ1sOdXB8J4L3QeMEF0x2rxnlpXKmFBNb9Nm2P/vo7ww==
+  dependencies:
+    "@heroui/system" "2.4.27"
+    "@heroui/use-measure" "2.1.8"
+
 "@heroui/input@2.4.30":
   version "2.4.30"
   resolved "https://registry.yarnpkg.com/@heroui/input/-/input-2.4.30.tgz#871cbd07763a7ede60fbaefaaa098ac162d04143"
@@ -860,6 +868,24 @@
     "@react-stately/tooltip" "3.5.9"
     "@react-types/overlays" "3.9.2"
     "@react-types/tooltip" "3.5.0"
+
+"@heroui/tooltip@^2.2.28":
+  version "2.2.28"
+  resolved "https://registry.yarnpkg.com/@heroui/tooltip/-/tooltip-2.2.28.tgz#4428ba5111ceea539e45750989f6fc339fd4ce87"
+  integrity sha512-u/+HE0VsOpru1PKdkbY5MygGe87f+WOBhpBhdwovK1HpaAKf2dRCdQIuAqCyZGXhK6TUFajsJo05Xrgjtppg/A==
+  dependencies:
+    "@heroui/aria-utils" "2.2.28"
+    "@heroui/dom-animation" "2.1.10"
+    "@heroui/framer-utils" "2.1.27"
+    "@heroui/react-utils" "2.1.14"
+    "@heroui/shared-utils" "2.1.12"
+    "@heroui/use-aria-overlay" "2.0.5"
+    "@heroui/use-safe-layout-effect" "2.1.8"
+    "@react-aria/overlays" "3.31.1"
+    "@react-aria/tooltip" "3.9.1"
+    "@react-stately/tooltip" "3.5.10"
+    "@react-types/overlays" "3.9.3"
+    "@react-types/tooltip" "3.5.1"
 
 "@heroui/use-aria-button@2.2.21":
   version "2.2.21"
@@ -1395,6 +1421,18 @@
     "@react-types/tooltip" "^3.5.0"
     "@swc/helpers" "^0.5.0"
 
+"@react-aria/tooltip@3.9.1":
+  version "3.9.1"
+  resolved "https://registry.yarnpkg.com/@react-aria/tooltip/-/tooltip-3.9.1.tgz#012ab2c5b6eee43b2af486a6130d945be8a17daa"
+  integrity sha512-mvEhqpvF4v/wj9zw3a8bsAEnySutGbxKXXt39s6WvF6dkVfaXfsmV9ahuMCHH//UGh/yidZGLrXX4YVdrgS8lA==
+  dependencies:
+    "@react-aria/interactions" "^3.27.0"
+    "@react-aria/utils" "^3.33.0"
+    "@react-stately/tooltip" "^3.5.10"
+    "@react-types/shared" "^3.33.0"
+    "@react-types/tooltip" "^3.5.1"
+    "@swc/helpers" "^0.5.0"
+
 "@react-aria/utils@3.32.0", "@react-aria/utils@^3.32.0":
   version "3.32.0"
   resolved "https://registry.yarnpkg.com/@react-aria/utils/-/utils-3.32.0.tgz#ebc2d715dd3814145f0e7c722797fdb20e308e7f"
@@ -1560,6 +1598,15 @@
     "@react-types/shared" "^3.32.1"
     "@swc/helpers" "^0.5.0"
 
+"@react-stately/tooltip@3.5.10", "@react-stately/tooltip@^3.5.10":
+  version "3.5.10"
+  resolved "https://registry.yarnpkg.com/@react-stately/tooltip/-/tooltip-3.5.10.tgz#24adb88e51194db7f5a9685cc170fe0b0c63aca9"
+  integrity sha512-GauUdc6Of08Np2iUw4xx/DdgpvszS9CxJWYcRnNyAAGPLQrmniVrpJvb0EUKQTP9sUSci1SlmpvJh4SNZx26Bw==
+  dependencies:
+    "@react-stately/overlays" "^3.6.22"
+    "@react-types/tooltip" "^3.5.1"
+    "@swc/helpers" "^0.5.0"
+
 "@react-stately/tooltip@3.5.9", "@react-stately/tooltip@^3.5.9":
   version "3.5.9"
   resolved "https://registry.yarnpkg.com/@react-stately/tooltip/-/tooltip-3.5.9.tgz#72c0b25e01fc89d89592b64f8232bd895701c60a"
@@ -1697,6 +1744,14 @@
   dependencies:
     "@react-types/overlays" "^3.9.2"
     "@react-types/shared" "^3.32.1"
+
+"@react-types/tooltip@3.5.1", "@react-types/tooltip@^3.5.1":
+  version "3.5.1"
+  resolved "https://registry.yarnpkg.com/@react-types/tooltip/-/tooltip-3.5.1.tgz#7b722b72f7e70533ada33d8c0fa3fec95f70c8f9"
+  integrity sha512-h6xOAWbWUJKs9CzcCyzSPATLHq7W5dS866HkXLrtCrRDShLuzQnojZnctD2tKtNt17990hjnOhl36GUBuO5kyw==
+  dependencies:
+    "@react-types/overlays" "^3.9.3"
+    "@react-types/shared" "^3.33.0"
 
 "@remix-run/router@1.16.0":
   version "1.16.0"
@@ -3977,7 +4032,7 @@ prettier@3.5.3:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.5.3.tgz#4fc2ce0d657e7a02e602549f053b239cb7dfe1b5"
   integrity sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==
 
-prop-types@^15.8.1:
+prop-types@^15.7.2, prop-types@^15.8.1:
   version "15.8.1"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
@@ -4000,6 +4055,13 @@ queue-microtask@^1.2.2:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/queue-microtask/-/queue-microtask-1.2.3.tgz#4929228bbc724dfac43e0efb058caf7b6cfb6243"
   integrity sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==
+
+react-bootstrap-icons@^1.11.6:
+  version "1.11.6"
+  resolved "https://registry.yarnpkg.com/react-bootstrap-icons/-/react-bootstrap-icons-1.11.6.tgz#211b58b2f2b32a624c4f5b24b9a4dae8df3d3268"
+  integrity sha512-ycXiyeSyzbS1C4+MlPTYe0riB+UlZ7LV7YZQYqlERV2cxDiKtntI0huHmP/3VVvzPt4tGxqK0K+Y6g7We3U6tQ==
+  dependencies:
+    prop-types "^15.7.2"
 
 react-dom@18.3.1:
   version "18.3.1"

@@ -1,6 +1,8 @@
-import { FC } from "react";
+import { FC, ReactNode } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Divider } from "@heroui/divider";
+import { Tooltip } from "@heroui/tooltip";
+import { QuestionCircleFill } from "react-bootstrap-icons";
 
 import { CalculationResult } from "../../calculatorService.utils";
 
@@ -27,6 +29,15 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
           <KeyValue
             keyName="Общая площадь"
             value={`${result.totalArea.toFixed(2)} м²`}
+            icon={
+              <Tooltip
+                content={`Площадь рассчитывается с учетом \n технических отступов.`}
+                style={{ width: 200 }}
+                placement="right"
+              >
+                <QuestionCircleFill className="text-gray-300 hover:text-amber-400 transition cursor-pointer" />
+              </Tooltip>
+            }
           />
           <KeyValue
             keyName="Общий периметр"
@@ -64,9 +75,20 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   );
 };
 
-const KeyValue = ({ keyName, value }: { keyName: string; value: string }) => (
+const KeyValue = ({
+  keyName,
+  value,
+  icon,
+}: {
+  keyName: string;
+  value: ReactNode;
+  icon?: ReactNode;
+}) => (
   <div className="flex justify-between items-center">
     <span className="text-sm text-gray-700">{keyName}:</span>
-    <span className="font-medium text-gray-900">{value}</span>
+    <div className="font-medium text-gray-900 flex items-center gap-1">
+      {value}
+      {icon}
+    </div>
   </div>
 );
