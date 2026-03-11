@@ -2,6 +2,7 @@ export type PriceList = PriceGroup[];
 
 export type ProductionUnitFormValues = {
   amount: number;
+  materialBase: string;
   material: string; // id
   cutting: string; // id
   print: string; // id

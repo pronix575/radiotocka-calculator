@@ -87,6 +87,7 @@ export const validationSchema = yup.object({
     ),
 
   material: yup.string().required("Выберите материал"),
+  materialBase: yup.string().required("Выберите материал"),
   cutting: yup.string().required("Выберите резку"),
   print: yup.string().required("Выберите печать"),
 });

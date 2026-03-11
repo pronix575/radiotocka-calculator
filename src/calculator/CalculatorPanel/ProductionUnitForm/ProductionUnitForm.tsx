@@ -28,11 +28,26 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   setCalculatingResult,
   reset,
 }) => {
-  console.log(JSON.stringify(priceList))
-
   const materialGroup = priceList.find((g) => g.groupName === "Материалы");
   const cuttingGroup = priceList.find((g) => g.groupName === "Резка");
   const printGroup = priceList.find((g) => g.groupName === "Печать");
+
+  const parseMaterialName = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length <= 1) return { base: name.trim(), thickness: "" };
+    return { base: parts[0], thickness: parts.slice(1).join(" ") };
+  };
+
+  const materialItems = materialGroup?.items ?? [];
+
+  const materialsByBase = materialItems.reduce<
+    Record<string, typeof materialItems>
+  >((acc, item) => {
+    const { base } = parseMaterialName(item.name);
+    if (!acc[base]) acc[base] = [];
+    acc[base].push(item);
+    return acc;
+  }, {});
 
   const getMaxDimension = (
     items: Array<{ width?: number; height?: number } | null | undefined>,
@@ -49,6 +64,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   const formik = useFormik({
     initialValues: {
       amount: null as number | null,
+      materialBase: "",
       material: "",
       cutting: "",
       print: "",
@@ -148,7 +164,16 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   }, [formik.values.unit]);
 
   const selectedMaterial = formik.values.material;
+  const selectedMaterialBase = formik.values.materialBase;
   const isMaterialSelected = !!selectedMaterial;
+  const isMaterialBaseSelected = !!selectedMaterialBase;
+
+  const materialBaseOptions = Object.keys(materialsByBase).sort((a, b) =>
+    a.localeCompare(b, "ru"),
+  );
+
+  const thicknessOptions =
+    (selectedMaterialBase ? materialsByBase[selectedMaterialBase] : []) ?? [];
 
   const filteredCuttingItems =
     cuttingGroup?.items.filter((item) => {
@@ -211,30 +236,60 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
 
       {/* Материал */}
       {materialGroup && (
-        <Select
-          label="Материал"
-          placeholder="Выберите материал"
-          selectedKeys={selectedMaterial ? [selectedMaterial] : []}
-          onSelectionChange={(keys) => {
-            const value = Array.from(keys)[0] as string;
-            formik.setFieldValue("material", value);
-            formik.setFieldTouched("material", true, false);
-          }}
-          isInvalid={shouldShowError("material")}
-          errorMessage={
-            shouldShowError("material") ? formik.errors.material : undefined
-          }
-        >
-          {materialGroup.items.map((item) => {
-            const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
-
-            return (
-              <SelectItem key={item.id} textValue={label}>
-                {label}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Select
+            label="Материал"
+            placeholder="Выберите материал"
+            selectedKeys={selectedMaterialBase ? [selectedMaterialBase] : []}
+            onSelectionChange={(keys) => {
+              const value = Array.from(keys)[0] as string;
+              formik.setFieldValue("materialBase", value);
+              formik.setFieldTouched("materialBase", true, false);
+              formik.setFieldValue("material", "");
+              formik.setFieldValue("cutting", "");
+              formik.setFieldValue("print", "");
+            }}
+            isInvalid={shouldShowError("materialBase")}
+            errorMessage={
+              shouldShowError("materialBase")
+                ? formik.errors.materialBase
+                : undefined
+            }
+          >
+            {materialBaseOptions.map((base) => (
+              <SelectItem key={base} textValue={base}>
+                {base}
               </SelectItem>
-            );
-          })}
-        </Select>
+            ))}
+          </Select>
+
+          <Select
+            label="Толщина"
+            placeholder="Выберите толщину"
+            isDisabled={!isMaterialBaseSelected}
+            selectedKeys={selectedMaterial ? [selectedMaterial] : []}
+            onSelectionChange={(keys) => {
+              const value = Array.from(keys)[0] as string;
+              formik.setFieldValue("material", value);
+              formik.setFieldTouched("material", true, false);
+            }}
+            isInvalid={shouldShowError("material")}
+            errorMessage={
+              shouldShowError("material") ? formik.errors.material : undefined
+            }
+          >
+            {thicknessOptions.map((item) => {
+              const { thickness } = parseMaterialName(item.name);
+              const label = `${thickness || item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
+
+              return (
+                <SelectItem key={item.id} textValue={label}>
+                  {label}
+                </SelectItem>
+              );
+            })}
+          </Select>
+        </div>
       )}
 
       {/* размеры */}
