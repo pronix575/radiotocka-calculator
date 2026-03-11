@@ -178,19 +178,19 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
 
               <form className="space-y-3" onSubmit={onSubmit}>
                 <input
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
                   placeholder="Ваше имя"
                   value={clientName}
                   onChange={(event) => setClientName(event.target.value)}
                 />
                 <input
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
                   placeholder="Компания"
                   value={clientCompany}
                   onChange={(event) => setClientCompany(event.target.value)}
                 />
                 <input
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
                   placeholder="Email для связи"
                   type="email"
                   required
@@ -198,7 +198,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                   onChange={(event) => setClientEmail(event.target.value)}
                 />
                 <textarea
-              className="min-h-[90px] w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+                  className="min-h-[90px] w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
                   placeholder="Комментарий"
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
@@ -231,7 +231,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                 )}
 
                 <button
-              className="w-full rounded-lg bg-gradient-to-r from-[#f99160] to-[#d43e14] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-300"
+                  className="w-full rounded-lg bg-gradient-to-r from-[#f99160] to-[#d43e14] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-300"
                   type="submit"
                   disabled={isSending}
                 >

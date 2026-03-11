@@ -1,5 +1,6 @@
 import Busboy from "busboy";
 import { Resend } from "resend";
+import punycode from "punycode/";
 
 type ParsedForm = {
   fields: Record<string, string>;
@@ -74,6 +75,21 @@ const sendJson = (
   res.end(JSON.stringify(payload));
 };
 
+const toAsciiEmail = (email: string) => {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return email;
+  if (/^[\x00-\x7F]+$/.test(domain)) return email;
+
+  const asciiDomain = domain
+    .split(".")
+    .map((label) =>
+      /[^\x00-\x7F]/.test(label) ? `xn--${punycode.encode(label)}` : label,
+    )
+    .join(".");
+
+  return `${local}@${asciiDomain}`;
+};
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     sendJson(res, 405, { error: "Method not allowed" });
@@ -81,10 +97,10 @@ export default async function handler(req: any, res: any) {
   }
 
   const resendKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL;
+  const fromEmailRaw = process.env.RESEND_FROM_EMAIL;
   const toEmail = process.env.RESEND_TO_EMAIL || "copy@9v.ru";
 
-  if (!resendKey || !fromEmail) {
+  if (!resendKey || !fromEmailRaw) {
     sendJson(res, 500, { error: "Email service is not configured." });
     return;
   }
@@ -158,7 +174,7 @@ export default async function handler(req: any, res: any) {
     `;
 
     await resend.emails.send({
-      from: fromEmail,
+      from: toAsciiEmail(fromEmailRaw),
       to: toEmail,
       subject: subjectParts.join(" — "),
       html,
