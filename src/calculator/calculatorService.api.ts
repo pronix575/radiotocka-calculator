@@ -1,76 +1,71 @@
-import { PriceGroup, Unit } from "./calculatorService.types";
+import { PriceGroup, PriceItem, Unit } from "./calculatorService.types";
 
-const mockPriceList: PriceGroup[] = [
-  {
-    groupName: "Материалы",
-    items: [
-      {
-        id: "mat_001",
-        name: "ПВХ 1мм",
-        price: 540,
-        unit: Unit.M2,
-      },
-      {
-        id: "mat_002",
-        name: "ПВХ 2мм",
-        price: 610,
-        unit: Unit.M2,
-      },
-      {
-        id: "mat_003",
-        name: "ПВХ 3мм",
-        price: 830,
-        unit: Unit.M2,
-      },
-    ],
-  },
-  {
-    groupName: "Резка",
-    items: [
-      {
-        id: "cut_001",
-        name: "Резка ПВХ ножом",
-        price: 15,
-        unit: Unit.M,
-      },
-      {
-        id: "cut_002",
-        name: "Резка ПВХ фрезером",
-        price: 25,
-        unit: Unit.M,
-        minCost: 1000,
-      },
-    ],
-  },
-  {
-    groupName: "Печать",
-    items: [
-      {
-        id: "print_001",
-        name: "Печать на ПВХ",
-        price: 700,
-        unit: Unit.M2,
-        minCost: 700,
-      },
-    ],
-  },
-];
+const SHEET_URL =
+  "https://docs.google.com/spreadsheets/d/1hHzLdhoqzpCqOJ15imFSSnJKyxIvD47ASbMAtDsr95w/export?format=csv&gid=0";
 
-export const getPriceList = async () => {
-  const response = (await new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve({
-          ok: true,
-          json: () => Promise.resolve(mockPriceList),
-        } as Response),
-      1000,
-    ),
-  )) as Response;
+const parseUnit = (unit: string): Unit => {
+  switch (unit) {
+    case "m":
+      return Unit.M;
+    case "m2":
+      return Unit.M2;
+    case "m3":
+      return Unit.M3;
+    case "wage":
+      return Unit.Wage;
+    case "unit":
+      return Unit.Unit;
+    default:
+      throw new Error(`Unknown unit: ${unit}`);
+  }
+};
+
+export const getPriceList = async (): Promise<PriceGroup[]> => {
+  const response = await fetch(SHEET_URL);
 
   if (!response.ok) {
     throw new Error("Failed to fetch price list");
   }
 
-  return response.json();
+  const csv = await response.text();
+
+  const rows = csv
+    .split("\n")
+    .map((row) => row.trim())
+    .filter(Boolean)
+    .map((row) => row.split(","));
+
+  const [header, ...data] = rows;
+
+  const groupIndex = header.indexOf("groupName");
+  const idIndex = header.indexOf("id");
+  const nameIndex = header.indexOf("name");
+  const priceIndex = header.indexOf("price");
+  const unitIndex = header.indexOf("unit");
+  const minCostIndex = header.indexOf("minCost");
+
+  const groups: Record<string, PriceGroup> = {};
+
+  data.forEach((row) => {
+    const groupName = row[groupIndex];
+
+    const item: PriceItem = {
+      id: row[idIndex],
+      name: row[nameIndex],
+      price: Number(row[priceIndex]),
+      unit: parseUnit(row[unitIndex]),
+      ...(row[minCostIndex] ? { minCost: Number(row[minCostIndex]) } : {}),
+    };
+
+    if (!groups[groupName]) {
+      groups[groupName] = {
+        groupName,
+        items: [],
+      };
+    }
+
+    groups[groupName].items.push(item);
+  });
+
+  return Object.values(groups);
 };
