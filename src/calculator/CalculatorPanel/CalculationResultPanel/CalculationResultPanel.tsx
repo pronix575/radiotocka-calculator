@@ -21,7 +21,7 @@ interface CalculationResultPanelProps {
   inputSummary: CalculationInputSummary | null;
 }
 
-const showSend = false; // Временно скрываем форму отправки, так как бэкенд еще не готов
+const showSend = true; // Временно скрываем форму отправки, так как бэкенд еще не готов
 
 export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   result,
