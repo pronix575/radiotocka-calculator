@@ -44,7 +44,7 @@ const parseForm = (req: any): Promise<ParsedForm> =>
         if (!filename) return;
         files.push({
           filename,
-          content: Buffer.concat(chunks).toString("base64"),
+          content: Buffer.concat(chunks as Uint8Array[]).toString("base64"),
           contentType: mimeType || "application/octet-stream",
         });
       });
@@ -64,7 +64,11 @@ const parseForm = (req: any): Promise<ParsedForm> =>
     req.pipe(busboy);
   });
 
-const sendJson = (res: any, status: number, payload: Record<string, unknown>) => {
+const sendJson = (
+  res: any,
+  status: number,
+  payload: Record<string, unknown>,
+) => {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.end(JSON.stringify(payload));
@@ -107,7 +111,8 @@ export default async function handler(req: any, res: any) {
 
     const subjectParts = ["Расчет стоимости"];
     if (clientName && clientName !== "—") subjectParts.push(clientName);
-    if (clientCompany && clientCompany !== "—") subjectParts.push(clientCompany);
+    if (clientCompany && clientCompany !== "—")
+      subjectParts.push(clientCompany);
 
     const html = `
       <h2>Расчет стоимости</h2>
@@ -143,9 +148,9 @@ export default async function handler(req: any, res: any) {
         <li><strong>Печать:</strong> ${Number(result.printCost ?? 0).toFixed(
           2,
         )} ₽</li>
-        <li><strong>Резка:</strong> ${Number(
-          result.cuttingCost ?? 0,
-        ).toFixed(2)} ₽</li>
+        <li><strong>Резка:</strong> ${Number(result.cuttingCost ?? 0).toFixed(
+          2,
+        )} ₽</li>
         <li><strong>Итого:</strong> ${Number(result.totalPrice ?? 0).toFixed(
           2,
         )} ₽</li>

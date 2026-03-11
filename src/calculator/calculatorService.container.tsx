@@ -131,7 +131,7 @@ const skeleton = (
         {/* Итог */}
         <div className="flex justify-between items-center pt-1">
           <Skeleton className="h-5 w-1/4 rounded-md bg-default-400" />
-          <Skeleton className="h-8 w-1/3 rounded-lg bg-primary/40" />
+          <Skeleton className="h-8 w-1/3 rounded-lg bg-[#f99160]/40" />
         </div>
       </div>
     </div>
