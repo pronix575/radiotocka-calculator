@@ -28,6 +28,8 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   setCalculatingResult,
   reset,
 }) => {
+  console.log(JSON.stringify(priceList))
+
   const materialGroup = priceList.find((g) => g.groupName === "Материалы");
   const cuttingGroup = priceList.find((g) => g.groupName === "Резка");
   const printGroup = priceList.find((g) => g.groupName === "Печать");
