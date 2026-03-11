@@ -209,7 +209,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   return (
     <form className="w-full space-y-4">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-        <h1 className="font-semibold text-[16px] whitespace-nowrap">
+        <h1 className="font-semibold text-[20px] whitespace-nowrap">
           Расчет стоимости
         </h1>
 
@@ -229,7 +229,13 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             ))}
           </Tabs>
 
-          <Button variant="flat" onPress={reset}>
+          <Button
+            variant="flat"
+            onPress={() => {
+              formik.resetForm();
+              reset();
+            }}
+          >
             Сбросить
           </Button>
         </div>
@@ -403,8 +409,8 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       )}
 
       <Button
-        color="primary"
-        className="w-full"
+        color="default"
+        className="w-full bg-gradient-to-r from-[#f99160] to-[#d43e14] text-white hover:brightness-95"
         size="lg"
         onPress={() => formik.handleSubmit()}
       >
