@@ -3,6 +3,7 @@ import { useFormik, yupToFormErrors } from "formik";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
+import { Switch } from "@heroui/switch";
 import { Tabs, Tab } from "@heroui/tabs";
 
 import { UnitTranslations } from "@/constants";
@@ -70,6 +71,8 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       print: "",
       height: "",
       width: "",
+      patternedCuttingEnabled: false,
+      patternedPerimeter: "",
       unit: MeasurementUnits.m,
     },
     validateOnChange: false,
@@ -121,6 +124,9 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         amount: values.amount ?? 0,
         width: toMeters(values.width).toString(),
         height: toMeters(values.height).toString(),
+        patternedPerimeter: values.patternedCuttingEnabled
+          ? toMeters(values.patternedPerimeter).toString()
+          : "",
       };
 
       setCalculatingResult(normalizedValues);
@@ -159,6 +165,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       ...formik.values,
       width: convert(formik.values.width),
       height: convert(formik.values.height),
+      patternedPerimeter: convert(formik.values.patternedPerimeter),
     });
 
     prevUnitRef.current = currentUnit;
@@ -347,6 +354,49 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             shouldShowError("height") ? formik.errors.height : undefined
           }
         />
+      </div>
+
+      <div className="rounded-xl border border-gray-200 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-medium text-gray-800">
+              Узорная резка
+            </div>
+            <div className="text-xs text-gray-500">
+              Укажите длину контура реза вручную для расчета резки.
+            </div>
+          </div>
+          <Switch
+            isSelected={formik.values.patternedCuttingEnabled}
+            isDisabled={!isMaterialSelected}
+            onValueChange={(value) => {
+              formik.setFieldValue("patternedCuttingEnabled", value);
+              if (!value) {
+                formik.setFieldValue("patternedPerimeter", "");
+              }
+            }}
+          />
+        </div>
+
+        {formik.values.patternedCuttingEnabled && (
+          <div className="mt-3">
+            <Input
+              label="Длина контура"
+              name="patternedPerimeter"
+              type="number"
+              value={formik.values.patternedPerimeter}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              isInvalid={shouldShowError("patternedPerimeter")}
+              errorMessage={
+                shouldShowError("patternedPerimeter")
+                  ? formik.errors.patternedPerimeter
+                  : undefined
+              }
+              endContent={MeasurementUnitsTranslate[formik.values.unit]}
+            />
+          </div>
+        )}
       </div>
 
       {/* Резка */}

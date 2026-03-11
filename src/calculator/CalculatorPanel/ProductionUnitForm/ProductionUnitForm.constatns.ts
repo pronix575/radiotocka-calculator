@@ -90,4 +90,26 @@ export const validationSchema = yup.object({
   materialBase: yup.string().required("Выберите материал"),
   cutting: yup.string().required("Выберите резку"),
   print: yup.string().required("Выберите печать"),
+  patternedCuttingEnabled: yup.boolean().default(false),
+  patternedPerimeter: yup
+    .string()
+    .when("patternedCuttingEnabled", {
+      is: true,
+      then: (schema) =>
+        schema
+          .required("Периметр обязателен")
+          .test(
+            "is-positive-number",
+            "Периметр должен быть числом больше 0",
+            (value, ctx) => {
+              if (!value) return false;
+              const unit: MeasurementUnits = ctx.options.context?.unit;
+              const numberValue = parseFloat(value.replace(",", "."));
+              const computedValue =
+                MeasurementUnitsToCoefficient[unit] * numberValue;
+              return !isNaN(computedValue) && computedValue > 0;
+            },
+          ),
+      otherwise: (schema) => schema.notRequired(),
+    }),
 });

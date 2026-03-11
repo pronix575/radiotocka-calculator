@@ -37,6 +37,8 @@ export const CalculatorPanel: FC<CalculatorPanelProps> = ({ priceList }) => {
       material: getItemName("Материалы", formValues.material),
       cutting: getItemName("Резка", formValues.cutting),
       print: getItemName("Печать", formValues.print),
+      patternedCuttingEnabled: formValues.patternedCuttingEnabled,
+      patternedPerimeter: formValues.patternedPerimeter,
     };
   }, [formValues, priceList]);
 

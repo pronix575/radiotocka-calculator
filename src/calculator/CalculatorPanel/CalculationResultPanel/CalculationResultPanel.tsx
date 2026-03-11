@@ -14,6 +14,8 @@ interface CalculationInputSummary {
   material: string;
   cutting: string;
   print: string;
+  patternedCuttingEnabled: boolean;
+  patternedPerimeter: string;
 }
 
 interface CalculationResultPanelProps {

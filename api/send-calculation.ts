@@ -124,6 +124,10 @@ export default async function handler(req: any, res: any) {
 
     const inputSummary = calculation.inputSummary || {};
     const result = calculation.result || {};
+    const patternedCuttingEnabled = Boolean(
+      inputSummary.patternedCuttingEnabled,
+    );
+    const patternedPerimeter = inputSummary.patternedPerimeter || "";
 
     const subjectParts = ["Расчет стоимости"];
     if (clientName && clientName !== "—") subjectParts.push(clientName);
@@ -142,6 +146,16 @@ export default async function handler(req: any, res: any) {
         <li><strong>Материал:</strong> ${inputSummary.material || "—"}</li>
         <li><strong>Печать:</strong> ${inputSummary.print || "—"}</li>
         <li><strong>Резка:</strong> ${inputSummary.cutting || "—"}</li>
+        <li><strong>Узорная резка:</strong> ${
+          patternedCuttingEnabled ? "Да" : "Нет"
+        }</li>
+        ${
+          patternedCuttingEnabled
+            ? `<li><strong>Периметр (узорная):</strong> ${
+                patternedPerimeter || "—"
+              } ${inputSummary.unit || "м"}</li>`
+            : ""
+        }
         <li><strong>Количество:</strong> ${inputSummary.amount ?? "—"}</li>
         <li><strong>Ширина:</strong> ${inputSummary.width ?? "—"} ${
           inputSummary.unit || "м"

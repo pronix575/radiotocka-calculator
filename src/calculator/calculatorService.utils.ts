@@ -56,7 +56,13 @@ export const calculateResult = (
   totalArea = Math.ceil(totalArea * 100) / 100;
 
   // Общий периметр
-  const totalPerimeter = Math.ceil(amount * ((width + height) * 2));
+  const manualPerimeter = formValues.patternedCuttingEnabled
+    ? Number(formValues.patternedPerimeter)
+    : 0;
+  const totalPerimeter =
+    formValues.patternedCuttingEnabled && manualPerimeter > 0
+      ? manualPerimeter * amount
+      : Math.ceil(amount * ((width + height) * 2));
 
   // Цена по компонентам
   let materialCost = totalArea * materialPrice;

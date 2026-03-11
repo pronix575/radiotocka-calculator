@@ -8,6 +8,8 @@ export type ProductionUnitFormValues = {
   print: string; // id
   height: string;
   width: string;
+  patternedCuttingEnabled: boolean;
+  patternedPerimeter: string;
   unit: MeasurementUnits;
 };
 
