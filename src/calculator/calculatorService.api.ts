@@ -1,3 +1,4 @@
+import Papa from "papaparse";
 import { PriceGroup, PriceItem, Unit } from "./calculatorService.types";
 
 const SHEET_URL =
@@ -29,32 +30,28 @@ export const getPriceList = async (): Promise<PriceGroup[]> => {
 
   const csv = await response.text();
 
-  const rows = csv
-    .split("\n")
-    .map((row) => row.trim())
-    .filter(Boolean)
-    .map((row) => row.split(","));
-
-  const [header, ...data] = rows;
-
-  const groupIndex = header.indexOf("groupName");
-  const idIndex = header.indexOf("id");
-  const nameIndex = header.indexOf("name");
-  const priceIndex = header.indexOf("price");
-  const unitIndex = header.indexOf("unit");
-  const minCostIndex = header.indexOf("minCost");
+  const { data } = Papa.parse(csv, {
+    header: true,
+    skipEmptyLines: true,
+  });
 
   const groups: Record<string, PriceGroup> = {};
 
-  data.forEach((row) => {
-    const groupName = row[groupIndex];
+  (data as any[]).forEach((row) => {
+    const groupName = row.groupName;
+
+    const lockId =
+      row.lockId?.length > 0
+        ? row.lockId.split(",").map((id: string) => id.trim())
+        : [];
 
     const item: PriceItem = {
-      id: row[idIndex],
-      name: row[nameIndex],
-      price: Number(row[priceIndex]),
-      unit: parseUnit(row[unitIndex]),
-      ...(row[minCostIndex] ? { minCost: Number(row[minCostIndex]) } : {}),
+      id: row.id,
+      name: row.name,
+      price: Number(row.price),
+      unit: parseUnit(row.unit),
+      lockId,
+      ...(row.minCost ? { minCost: Number(row.minCost) } : {}),
     };
 
     if (!groups[groupName]) {

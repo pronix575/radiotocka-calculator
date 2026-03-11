@@ -43,9 +43,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
 
       const toMeters = (value: string) => {
         const numeric = Number(value);
-
         if (isNaN(numeric)) return 0;
-
         return numeric * coef;
       };
 
@@ -80,7 +78,6 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       const numeric = Number(value);
       if (isNaN(numeric)) return "";
 
-      // перевод: текущее значение → в метры → в новую единицу
       return ((numeric * prevCoef) / nextCoef).toFixed(2).toString();
     };
 
@@ -96,6 +93,39 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   const materialGroup = priceList.find((g) => g.groupName === "Материалы");
   const cuttingGroup = priceList.find((g) => g.groupName === "Резка");
   const printGroup = priceList.find((g) => g.groupName === "Печать");
+
+  const selectedMaterial = formik.values.material;
+  const isMaterialSelected = !!selectedMaterial;
+
+  const filteredCuttingItems =
+    cuttingGroup?.items.filter((item) => {
+      if (!selectedMaterial) return true;
+      if (!item.lockId?.length) return true;
+      return item.lockId.includes(selectedMaterial);
+    }) ?? [];
+
+  const filteredPrintItems =
+    printGroup?.items.filter((item) => {
+      if (!selectedMaterial) return true;
+      if (!item.lockId?.length) return true;
+      return item.lockId.includes(selectedMaterial);
+    }) ?? [];
+
+  useEffect(() => {
+    if (
+      formik.values.cutting &&
+      !filteredCuttingItems.some((i) => i.id === formik.values.cutting)
+    ) {
+      formik.setFieldValue("cutting", "");
+    }
+
+    if (
+      formik.values.print &&
+      !filteredPrintItems.some((i) => i.id === formik.values.print)
+    ) {
+      formik.setFieldValue("print", "");
+    }
+  }, [selectedMaterial]);
 
   return (
     <form className="w-full space-y-4" onSubmit={formik.handleSubmit}>
@@ -119,145 +149,118 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
               />
             ))}
           </Tabs>
+
           <Button variant="flat" onPress={reset}>
             Сбросить
           </Button>
         </div>
       </div>
 
+      {/* Материал */}
+      {materialGroup && (
+        <Select
+          label="Материал"
+          placeholder="Выберите материал"
+          selectedKeys={selectedMaterial ? [selectedMaterial] : []}
+          onSelectionChange={(keys) => {
+            const value = Array.from(keys)[0] as string;
+            formik.setFieldValue("material", value);
+          }}
+        >
+          {materialGroup.items.map((item) => {
+            const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
+
+            return (
+              <SelectItem key={item.id} textValue={label}>
+                {label}
+              </SelectItem>
+            );
+          })}
+        </Select>
+      )}
+
       {/* размеры */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* количество */}
         <Input
           label="Количество"
           inputMode="numeric"
-          pattern="[0-9]*"
+          isDisabled={!isMaterialSelected}
           value={formik.values.amount?.toString() || ""}
           onChange={(e) => {
             const value = e.target.value.replace(/\D/g, "");
             formik.setFieldValue("amount", value ? Number(value) : null);
           }}
-          errorMessage={
-            formik.touched.amount ? formik.errors.amount : undefined
-          }
-          isInvalid={!!(formik.touched.amount && formik.errors.amount)}
-          onBlur={() => formik.setFieldTouched("amount", true)}
         />
 
         <Input
           label="Ширина"
+          name="width"
           type="number"
-          placeholder="Введите ширину"
+          isDisabled={!isMaterialSelected}
           value={formik.values.width}
           onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          name="width"
           endContent={MeasurementUnitsTranslate[formik.values.unit]}
-          isInvalid={!!(formik.touched.width && formik.errors.width)}
-          errorMessage={formik.touched.width ? formik.errors.width : undefined}
         />
 
         <Input
           label="Высота"
+          name="height"
           type="number"
-          placeholder="Введите высоту"
+          isDisabled={!isMaterialSelected}
           value={formik.values.height}
           onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          name="height"
           endContent={MeasurementUnitsTranslate[formik.values.unit]}
-          isInvalid={!!(formik.touched.height && formik.errors.height)}
-          errorMessage={
-            formik.touched.height ? formik.errors.height : undefined
-          }
         />
       </div>
 
-      {/* селекты */}
-      <div className="flex flex-col gap-4">
-        {/* МАТЕРИАЛ */}
-        {materialGroup && (
-          <Select
-            label="Материал"
-            placeholder="Выберите материал"
-            selectedKeys={
-              formik.values.material ? [formik.values.material] : []
-            }
-            onSelectionChange={(keys) => {
-              const value = Array.from(keys)[0] as string;
-              formik.setFieldValue("material", value);
-            }}
-            isInvalid={!!(formik.touched.material && formik.errors.material)}
-            errorMessage={
-              formik.touched.material ? formik.errors.material : undefined
-            }
-            onBlur={() => formik.setFieldTouched("material", true)}
-          >
-            {materialGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
-              return (
-                <SelectItem key={item.id} textValue={label}>
-                  {label}
-                </SelectItem>
-              );
-            })}
-          </Select>
-        )}
+      {/* Резка */}
+      {cuttingGroup && (
+        <Select
+          label="Резка"
+          placeholder="Выберите резку"
+          isDisabled={!isMaterialSelected}
+          selectedKeys={formik.values.cutting ? [formik.values.cutting] : []}
+          onSelectionChange={(keys) => {
+            const value = Array.from(keys)[0] as string;
+            formik.setFieldValue("cutting", value);
+          }}
+          nonce="Нет данных"
+        >
+          {filteredCuttingItems.map((item) => {
+            const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
 
-        {/* РЕЗКА */}
-        {cuttingGroup && (
-          <Select
-            label="Резка"
-            placeholder="Выберите резку"
-            selectedKeys={formik.values.cutting ? [formik.values.cutting] : []}
-            onSelectionChange={(keys) => {
-              const value = Array.from(keys)[0] as string;
-              formik.setFieldValue("cutting", value);
-            }}
-            isInvalid={!!(formik.touched.cutting && formik.errors.cutting)}
-            errorMessage={
-              formik.touched.cutting ? formik.errors.cutting : undefined
-            }
-            onBlur={() => formik.setFieldTouched("cutting", true)}
-          >
-            {cuttingGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
-              return (
-                <SelectItem key={item.id} textValue={label}>
-                  {label}
-                </SelectItem>
-              );
-            })}
-          </Select>
-        )}
+            return (
+              <SelectItem key={item.id} textValue={label}>
+                {label}
+              </SelectItem>
+            );
+          })}
+        </Select>
+      )}
 
-        {/* ПЕЧАТЬ */}
-        {printGroup && (
-          <Select
-            label="Печать"
-            placeholder="Выберите печать"
-            selectedKeys={formik.values.print ? [formik.values.print] : []}
-            onSelectionChange={(keys) => {
-              const value = Array.from(keys)[0] as string;
-              formik.setFieldValue("print", value);
-            }}
-            isInvalid={!!(formik.touched.print && formik.errors.print)}
-            errorMessage={
-              formik.touched.print ? formik.errors.print : undefined
-            }
-            onBlur={() => formik.setFieldTouched("print", true)}
-          >
-            {printGroup.items.map((item) => {
-              const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
-              return (
-                <SelectItem key={item.id} textValue={label}>
-                  {label}
-                </SelectItem>
-              );
-            })}
-          </Select>
-        )}
-      </div>
+      {/* Печать */}
+      {printGroup && (
+        <Select
+          label="Печать"
+          placeholder="Выберите печать"
+          isDisabled={!isMaterialSelected}
+          selectedKeys={formik.values.print ? [formik.values.print] : []}
+          onSelectionChange={(keys) => {
+            const value = Array.from(keys)[0] as string;
+            formik.setFieldValue("print", value);
+          }}
+        >
+          {filteredPrintItems.map((item) => {
+            const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
+
+            return (
+              <SelectItem key={item.id} textValue={label}>
+                {label}
+              </SelectItem>
+            );
+          })}
+        </Select>
+      )}
 
       <Button color="primary" type="submit" className="w-full" size="lg">
         Рассчитать
