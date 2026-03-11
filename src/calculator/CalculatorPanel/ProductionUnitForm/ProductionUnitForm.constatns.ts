@@ -2,6 +2,9 @@ import { MeasurementUnitsToCoefficient } from "@/calculator/calculatorService.co
 import { MeasurementUnits } from "@/calculator/calculatorService.types";
 import * as yup from "yup";
 
+export const DEFAULT_MAX_WIDTH_M = 3;
+export const DEFAULT_MAX_HEIGHT_M = 2;
+
 export const validationSchema = yup.object({
   amount: yup
     .number()
@@ -26,15 +29,27 @@ export const validationSchema = yup.object({
         return !isNaN(computedValue) && computedValue > 0;
       },
     )
-    .test("max-width", "Ширина не должна превышать 3 м", (value, ctx) => {
-      if (!value) return true; // другая валидация уже обработает пустое
-      const unit: MeasurementUnits = ctx.options.context?.unit;
+    .test(
+      "max-width",
+      "Ширина не должна превышать допустимый максимум",
+      (value, ctx) => {
+        if (!value) return true; // другая валидация уже обработает пустое
+        const unit: MeasurementUnits = ctx.options.context?.unit;
 
-      const numberValue = parseFloat(value.replace(",", "."));
+        const numberValue = parseFloat(value.replace(",", "."));
 
-      const computedValue = MeasurementUnitsToCoefficient[unit] * numberValue;
-      return computedValue <= 3;
-    }),
+        const computedValue = MeasurementUnitsToCoefficient[unit] * numberValue;
+        const maxWidth = ctx.options.context?.maxWidth ?? DEFAULT_MAX_WIDTH_M;
+
+        if (isNaN(maxWidth)) return true;
+
+        if (computedValue <= maxWidth) return true;
+
+        return ctx.createError({
+          message: `Ширина не должна превышать ${maxWidth} м`,
+        });
+      },
+    ),
 
   height: yup
     .string()
@@ -50,13 +65,26 @@ export const validationSchema = yup.object({
         return !isNaN(computedValue) && computedValue > 0;
       },
     )
-    .test("max-height", "Высота не должна превышать 2 м", (value, ctx) => {
-      if (!value) return true;
-      const unit: MeasurementUnits = ctx.options.context?.unit;
-      const numberValue = parseFloat(value.replace(",", "."));
-      const computedValue = MeasurementUnitsToCoefficient[unit] * numberValue;
-      return computedValue <= 2;
-    }),
+    .test(
+      "max-height",
+      "Высота не должна превышать допустимый максимум",
+      (value, ctx) => {
+        if (!value) return true;
+        const unit: MeasurementUnits = ctx.options.context?.unit;
+        const numberValue = parseFloat(value.replace(",", "."));
+        const computedValue = MeasurementUnitsToCoefficient[unit] * numberValue;
+        const maxHeight =
+          ctx.options.context?.maxHeight ?? DEFAULT_MAX_HEIGHT_M;
+
+        if (isNaN(maxHeight)) return true;
+
+        if (computedValue <= maxHeight) return true;
+
+        return ctx.createError({
+          message: `Высота не должна превышать ${maxHeight} м`,
+        });
+      },
+    ),
 
   material: yup.string().required("Выберите материал"),
   cutting: yup.string().required("Выберите резку"),

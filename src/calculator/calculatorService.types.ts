@@ -25,6 +25,8 @@ export interface PriceItem {
   unit: Unit;
   minCost?: number;
   lockId: string[];
+  width?: number;
+  height?: number;
 }
 
 export interface PriceGroup {
