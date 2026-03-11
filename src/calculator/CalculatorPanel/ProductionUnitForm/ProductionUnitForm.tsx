@@ -236,22 +236,24 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       )}
 
       {/* размеры */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Input
-          label="Количество"
-          inputMode="numeric"
-          isDisabled={!isMaterialSelected}
-          value={formik.values.amount?.toString() || ""}
-          onBlur={formik.handleBlur}
-          onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, "");
-            formik.setFieldValue("amount", value ? Number(value) : null);
-          }}
-          isInvalid={shouldShowError("amount")}
-          errorMessage={
-            shouldShowError("amount") ? formik.errors.amount : undefined
-          }
-        />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="col-span-2 md:col-span-1">
+          <Input
+            label="Количество"
+            inputMode="numeric"
+            isDisabled={!isMaterialSelected}
+            value={formik.values.amount?.toString() || ""}
+            onBlur={formik.handleBlur}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, "");
+              formik.setFieldValue("amount", value ? Number(value) : null);
+            }}
+            isInvalid={shouldShowError("amount")}
+            errorMessage={
+              shouldShowError("amount") ? formik.errors.amount : undefined
+            }
+          />
+        </div>
 
         <Input
           label="Ширина"
