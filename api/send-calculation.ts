@@ -1,6 +1,6 @@
 import Busboy from "busboy";
 import { Resend } from "resend";
-import punycode from "punycode/";
+import punycode from "punycode/punycode.js";
 
 type ParsedForm = {
   fields: Record<string, string>;
