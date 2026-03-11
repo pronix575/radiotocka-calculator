@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react";
+import { ChangeEvent, FC, FormEvent, ReactNode, useState } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Tooltip } from "@heroui/tooltip";
@@ -6,13 +6,107 @@ import { QuestionCircleFill } from "react-bootstrap-icons";
 
 import { CalculationResult } from "../../calculatorService.utils";
 
+interface CalculationInputSummary {
+  amount: number;
+  width: string;
+  height: string;
+  unit: string;
+  material: string;
+  cutting: string;
+  print: string;
+}
+
 interface CalculationResultPanelProps {
   result: CalculationResult | null;
+  inputSummary: CalculationInputSummary | null;
 }
 
 export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   result,
+  inputSummary,
 }) => {
+  const [clientName, setClientName] = useState("");
+  const [clientCompany, setClientCompany] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSent, setIsSent] = useState(false);
+
+  const MAX_FILES = 5;
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+  const onFilesChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    const selected = Array.from(event.target.files ?? []);
+
+    if (selected.length > MAX_FILES) {
+      setError(`Можно прикрепить не более ${MAX_FILES} файлов.`);
+      return;
+    }
+
+    const tooLarge = selected.find((file) => file.size > MAX_FILE_SIZE);
+    if (tooLarge) {
+      setError("Размер каждого файла должен быть до 10 МБ.");
+      return;
+    }
+
+    setFiles(selected);
+  };
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setIsSent(false);
+
+    if (!clientEmail) {
+      setError("Введите ваш email.");
+      return;
+    }
+
+    if (!result) return;
+
+    setIsSending(true);
+    try {
+      const formData = new FormData();
+      formData.append(
+        "calculation",
+        JSON.stringify({
+          result,
+          inputSummary,
+        }),
+      );
+      formData.append("clientName", clientName);
+      formData.append("clientCompany", clientCompany);
+      formData.append("clientEmail", clientEmail);
+      formData.append("message", message);
+      files.forEach((file) => formData.append("files", file));
+
+      const response = await fetch("/api/send-calculation", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error || "Не удалось отправить письмо.");
+      }
+
+      setIsSent(true);
+      setMessage("");
+      setFiles([]);
+    } catch (sendError) {
+      setError(
+        sendError instanceof Error
+          ? sendError.message
+          : "Не удалось отправить письмо.",
+      );
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   if (!result) {
     return (
       <div className="p-6 text-center text-gray-500">
@@ -69,6 +163,83 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
           <span className="text-2xl font-extrabold text-[#006FEE]">
             ≈ {result.totalPrice.toFixed(2)} ₽
           </span>
+        </div>
+
+        <Divider className="my-2" />
+
+        <div className="space-y-3">
+          <div>
+            <div className="text-sm font-semibold text-gray-800">
+              Отправить расчет на copy@9v.ru
+            </div>
+            <div className="text-xs text-gray-500">
+              Укажите ваши контактные данные и при необходимости прикрепите
+              файлы.
+            </div>
+          </div>
+
+          <form className="space-y-3" onSubmit={onSubmit}>
+            <input
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#006FEE]"
+              placeholder="Ваше имя"
+              value={clientName}
+              onChange={(event) => setClientName(event.target.value)}
+            />
+            <input
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#006FEE]"
+              placeholder="Компания"
+              value={clientCompany}
+              onChange={(event) => setClientCompany(event.target.value)}
+            />
+            <input
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#006FEE]"
+              placeholder="Email для связи"
+              type="email"
+              required
+              value={clientEmail}
+              onChange={(event) => setClientEmail(event.target.value)}
+            />
+            <textarea
+              className="min-h-[90px] w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#006FEE]"
+              placeholder="Комментарий"
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+            />
+
+            <div className="space-y-1 text-xs text-gray-500">
+              <input
+                className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-xs file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+                type="file"
+                multiple
+                onChange={onFilesChange}
+              />
+              <div>До {MAX_FILES} файлов, максимум 10 МБ каждый.</div>
+              {files.length > 0 && (
+                <div className="text-xs text-gray-600">
+                  Выбрано файлов: {files.length}
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
+                {error}
+              </div>
+            )}
+            {isSent && (
+              <div className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-600">
+                Письмо отправлено. Мы свяжемся с вами.
+              </div>
+            )}
+
+            <button
+              className="w-full rounded-lg bg-[#006FEE] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0059c9] disabled:cursor-not-allowed disabled:bg-gray-300"
+              type="submit"
+              disabled={isSending}
+            >
+              {isSending ? "Отправляем..." : "Отправить расчет"}
+            </button>
+          </form>
         </div>
       </CardBody>
     </Card>

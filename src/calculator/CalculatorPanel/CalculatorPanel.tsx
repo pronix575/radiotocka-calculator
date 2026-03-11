@@ -20,6 +20,26 @@ export const CalculatorPanel: FC<CalculatorPanelProps> = ({ priceList }) => {
     return calculateResult(formValues, priceList);
   }, [formValues, priceList]);
 
+  const calculationInputSummary = useMemo(() => {
+    if (!formValues) return null;
+
+    const getItemName = (groupName: string, id: string) => {
+      if (!id) return "";
+      const group = priceList.find((g) => g.groupName === groupName);
+      return group?.items.find((item) => item.id === id)?.name ?? id;
+    };
+
+    return {
+      amount: formValues.amount,
+      width: formValues.width,
+      height: formValues.height,
+      unit: "м",
+      material: getItemName("Материалы", formValues.material),
+      cutting: getItemName("Резка", formValues.cutting),
+      print: getItemName("Печать", formValues.print),
+    };
+  }, [formValues, priceList]);
+
   return (
     <div className="flex flex-col justify-center p-6 max-w-6xl mx-auto gap-4 md:flex-row md:gap-x-4">
       <div className="w-full md:flex-1">
@@ -30,7 +50,10 @@ export const CalculatorPanel: FC<CalculatorPanelProps> = ({ priceList }) => {
         />
       </div>
       <div className="w-full md:w-80">
-        <CalculationResultPanel result={calculationResult} />
+        <CalculationResultPanel
+          result={calculationResult}
+          inputSummary={calculationInputSummary}
+        />
       </div>
     </div>
   );
