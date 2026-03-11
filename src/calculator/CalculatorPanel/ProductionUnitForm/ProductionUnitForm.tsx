@@ -72,7 +72,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       width: "",
       unit: MeasurementUnits.m,
     },
-    validateOnChange: true,
+    validateOnChange: false,
     validateOnMount: false,
     validateOnBlur: false,
     validate: (values) => {
@@ -129,7 +129,8 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
 
   const shouldShowError = (field: keyof ProductionUnitFormValues) =>
     Boolean(formik.errors[field]) &&
-    (Boolean(formik.touched[field]) || formik.submitCount > 0);
+    (Boolean(formik.touched[field]) || formik.submitCount > 0) &&
+    (field !== "material" || Boolean(formik.values.materialBase));
 
   const prevUnitRef = useRef<MeasurementUnits>(formik.values.unit);
 
@@ -246,6 +247,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
               formik.setFieldValue("materialBase", value);
               formik.setFieldTouched("materialBase", true, false);
               formik.setFieldValue("material", "");
+              formik.setFieldTouched("material", false, false);
               formik.setFieldValue("cutting", "");
               formik.setFieldValue("print", "");
             }}

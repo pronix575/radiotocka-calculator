@@ -48,8 +48,8 @@ export const calculateResult = (
   const printPrice = printItem.price;
   const cuttingPrice = cuttingItem.price;
 
-  const adjustedWidth = width + 0.03;
-  const adjustedHeight = height + 0.03;
+  const adjustedWidth = width;
+  const adjustedHeight = height;
 
   // Общая площадь
   let totalArea = amount * adjustedWidth * adjustedHeight;
