@@ -207,7 +207,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   }, [selectedMaterial]);
 
   return (
-    <form className="w-full space-y-4" onSubmit={formik.handleSubmit}>
+    <form className="w-full space-y-4">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <h1 className="font-semibold text-[16px] whitespace-nowrap">
           Расчет стоимости
@@ -245,9 +245,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             onSelectionChange={(keys) => {
               const value = Array.from(keys)[0] as string;
               formik.setFieldValue("materialBase", value);
-              formik.setFieldTouched("materialBase", true, false);
               formik.setFieldValue("material", "");
-              formik.setFieldTouched("material", false, false);
               formik.setFieldValue("cutting", "");
               formik.setFieldValue("print", "");
             }}
@@ -404,7 +402,12 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         </Select>
       )}
 
-      <Button color="primary" type="submit" className="w-full" size="lg">
+      <Button
+        color="primary"
+        className="w-full"
+        size="lg"
+        onPress={() => formik.handleSubmit()}
+      >
         Рассчитать
       </Button>
     </form>
