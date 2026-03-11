@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef } from "react";
-import { useFormik } from "formik";
+import { useFormik, yupToFormErrors } from "formik";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
@@ -12,7 +12,11 @@ import {
   Unit,
 } from "@/calculator/calculatorService.types";
 
-import { validationSchema } from "./ProductionUnitForm.constatns";
+import {
+  DEFAULT_MAX_HEIGHT_M,
+  DEFAULT_MAX_WIDTH_M,
+  validationSchema,
+} from "./ProductionUnitForm.constatns";
 import { ProductionUnitFormProps } from "./ProductionUnitForm.types";
 import {
   MeasurementUnitsToCoefficient,
@@ -24,9 +28,43 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   setCalculatingResult,
   reset,
 }) => {
+  const materialGroup = priceList.find((g) => g.groupName === "Материалы");
+  const cuttingGroup = priceList.find((g) => g.groupName === "Резка");
+  const printGroup = priceList.find((g) => g.groupName === "Печать");
+
+  const parseMaterialName = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length <= 1) return { base: name.trim(), thickness: "" };
+    return { base: parts[0], thickness: parts.slice(1).join(" ") };
+  };
+
+  const materialItems = materialGroup?.items ?? [];
+
+  const materialsByBase = materialItems.reduce<
+    Record<string, typeof materialItems>
+  >((acc, item) => {
+    const { base } = parseMaterialName(item.name);
+    if (!acc[base]) acc[base] = [];
+    acc[base].push(item);
+    return acc;
+  }, {});
+
+  const getMaxDimension = (
+    items: Array<{ width?: number; height?: number } | null | undefined>,
+    key: "width" | "height",
+    fallback: number,
+  ) => {
+    const values = items
+      .map((item) => item?.[key])
+      .filter((value): value is number => value !== undefined && !isNaN(value));
+
+    return values.length > 0 ? Math.min(...values) : fallback;
+  };
+
   const formik = useFormik({
     initialValues: {
       amount: null as number | null,
+      materialBase: "",
       material: "",
       cutting: "",
       print: "",
@@ -34,10 +72,41 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       width: "",
       unit: MeasurementUnits.m,
     },
-    validateOnChange: true,
+    validateOnChange: false,
     validateOnMount: false,
     validateOnBlur: false,
-    validationSchema,
+    validate: (values) => {
+      const selectedMaterialItem = materialGroup?.items.find(
+        (item) => item.id === values.material,
+      );
+      const selectedCuttingItem = cuttingGroup?.items.find(
+        (item) => item.id === values.cutting,
+      );
+      const selectedPrintItem = printGroup?.items.find(
+        (item) => item.id === values.print,
+      );
+
+      const maxWidth = getMaxDimension(
+        [selectedMaterialItem, selectedCuttingItem, selectedPrintItem],
+        "width",
+        DEFAULT_MAX_WIDTH_M,
+      );
+      const maxHeight = getMaxDimension(
+        [selectedMaterialItem, selectedCuttingItem, selectedPrintItem],
+        "height",
+        DEFAULT_MAX_HEIGHT_M,
+      );
+
+      try {
+        validationSchema.validateSync(values, {
+          abortEarly: false,
+          context: { ...values, maxWidth, maxHeight },
+        });
+        return {};
+      } catch (error) {
+        return yupToFormErrors(error);
+      }
+    },
     onSubmit: (values) => {
       const coef = MeasurementUnitsToCoefficient[values.unit];
 
@@ -57,6 +126,11 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       setCalculatingResult(normalizedValues);
     },
   });
+
+  const shouldShowError = (field: keyof ProductionUnitFormValues) =>
+    Boolean(formik.errors[field]) &&
+    (Boolean(formik.touched[field]) || formik.submitCount > 0) &&
+    (field !== "material" || Boolean(formik.values.materialBase));
 
   const prevUnitRef = useRef<MeasurementUnits>(formik.values.unit);
 
@@ -90,12 +164,17 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
     prevUnitRef.current = currentUnit;
   }, [formik.values.unit]);
 
-  const materialGroup = priceList.find((g) => g.groupName === "Материалы");
-  const cuttingGroup = priceList.find((g) => g.groupName === "Резка");
-  const printGroup = priceList.find((g) => g.groupName === "Печать");
-
   const selectedMaterial = formik.values.material;
+  const selectedMaterialBase = formik.values.materialBase;
   const isMaterialSelected = !!selectedMaterial;
+  const isMaterialBaseSelected = !!selectedMaterialBase;
+
+  const materialBaseOptions = Object.keys(materialsByBase).sort((a, b) =>
+    a.localeCompare(b, "ru"),
+  );
+
+  const thicknessOptions =
+    (selectedMaterialBase ? materialsByBase[selectedMaterialBase] : []) ?? [];
 
   const filteredCuttingItems =
     cuttingGroup?.items.filter((item) => {
@@ -158,39 +237,82 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
 
       {/* Материал */}
       {materialGroup && (
-        <Select
-          label="Материал"
-          placeholder="Выберите материал"
-          selectedKeys={selectedMaterial ? [selectedMaterial] : []}
-          onSelectionChange={(keys) => {
-            const value = Array.from(keys)[0] as string;
-            formik.setFieldValue("material", value);
-          }}
-        >
-          {materialGroup.items.map((item) => {
-            const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
-
-            return (
-              <SelectItem key={item.id} textValue={label}>
-                {label}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Select
+            label="Материал"
+            placeholder="Выберите материал"
+            selectedKeys={selectedMaterialBase ? [selectedMaterialBase] : []}
+            onSelectionChange={(keys) => {
+              const value = Array.from(keys)[0] as string;
+              formik.setFieldValue("materialBase", value);
+              formik.setFieldTouched("materialBase", true, false);
+              formik.setFieldValue("material", "");
+              formik.setFieldTouched("material", false, false);
+              formik.setFieldValue("cutting", "");
+              formik.setFieldValue("print", "");
+            }}
+            isInvalid={shouldShowError("materialBase")}
+            errorMessage={
+              shouldShowError("materialBase")
+                ? formik.errors.materialBase
+                : undefined
+            }
+          >
+            {materialBaseOptions.map((base) => (
+              <SelectItem key={base} textValue={base}>
+                {base}
               </SelectItem>
-            );
-          })}
-        </Select>
+            ))}
+          </Select>
+
+          <Select
+            label="Толщина"
+            placeholder="Выберите толщину"
+            isDisabled={!isMaterialBaseSelected}
+            selectedKeys={selectedMaterial ? [selectedMaterial] : []}
+            onSelectionChange={(keys) => {
+              const value = Array.from(keys)[0] as string;
+              formik.setFieldValue("material", value);
+              formik.setFieldTouched("material", true, false);
+            }}
+            isInvalid={shouldShowError("material")}
+            errorMessage={
+              shouldShowError("material") ? formik.errors.material : undefined
+            }
+          >
+            {thicknessOptions.map((item) => {
+              const { thickness } = parseMaterialName(item.name);
+              const label = `${thickness || item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
+
+              return (
+                <SelectItem key={item.id} textValue={label}>
+                  {label}
+                </SelectItem>
+              );
+            })}
+          </Select>
+        </div>
       )}
 
       {/* размеры */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Input
-          label="Количество"
-          inputMode="numeric"
-          isDisabled={!isMaterialSelected}
-          value={formik.values.amount?.toString() || ""}
-          onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, "");
-            formik.setFieldValue("amount", value ? Number(value) : null);
-          }}
-        />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="col-span-2 md:col-span-1">
+          <Input
+            label="Количество"
+            inputMode="numeric"
+            isDisabled={!isMaterialSelected}
+            value={formik.values.amount?.toString() || ""}
+            onBlur={formik.handleBlur}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, "");
+              formik.setFieldValue("amount", value ? Number(value) : null);
+            }}
+            isInvalid={shouldShowError("amount")}
+            errorMessage={
+              shouldShowError("amount") ? formik.errors.amount : undefined
+            }
+          />
+        </div>
 
         <Input
           label="Ширина"
@@ -199,7 +321,12 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           isDisabled={!isMaterialSelected}
           value={formik.values.width}
           onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
           endContent={MeasurementUnitsTranslate[formik.values.unit]}
+          isInvalid={shouldShowError("width")}
+          errorMessage={
+            shouldShowError("width") ? formik.errors.width : undefined
+          }
         />
 
         <Input
@@ -209,7 +336,12 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           isDisabled={!isMaterialSelected}
           value={formik.values.height}
           onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
           endContent={MeasurementUnitsTranslate[formik.values.unit]}
+          isInvalid={shouldShowError("height")}
+          errorMessage={
+            shouldShowError("height") ? formik.errors.height : undefined
+          }
         />
       </div>
 
@@ -223,8 +355,13 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           onSelectionChange={(keys) => {
             const value = Array.from(keys)[0] as string;
             formik.setFieldValue("cutting", value);
+            formik.setFieldTouched("cutting", true, false);
           }}
           nonce="Нет данных"
+          isInvalid={shouldShowError("cutting")}
+          errorMessage={
+            shouldShowError("cutting") ? formik.errors.cutting : undefined
+          }
         >
           {filteredCuttingItems.map((item) => {
             const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
@@ -248,7 +385,12 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           onSelectionChange={(keys) => {
             const value = Array.from(keys)[0] as string;
             formik.setFieldValue("print", value);
+            formik.setFieldTouched("print", true, false);
           }}
+          isInvalid={shouldShowError("print")}
+          errorMessage={
+            shouldShowError("print") ? formik.errors.print : undefined
+          }
         >
           {filteredPrintItems.map((item) => {
             const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;

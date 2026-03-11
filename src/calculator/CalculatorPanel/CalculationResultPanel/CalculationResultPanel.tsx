@@ -125,7 +125,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
             value={`${result.totalArea.toFixed(2)} м²`}
             icon={
               <Tooltip
-                content={`Площадь рассчитывается с учетом \n технических отступов.`}
+                content={`Площадь рассчитывается без учета \n технических отступов.`}
                 style={{ width: 200 }}
                 placement="right"
               >

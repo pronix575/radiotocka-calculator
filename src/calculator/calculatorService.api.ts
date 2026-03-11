@@ -21,6 +21,12 @@ const parseUnit = (unit: string): Unit => {
   }
 };
 
+const parseOptionalNumber = (value: unknown): number | undefined => {
+  if (value === null || value === undefined || value === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
 export const getPriceList = async (): Promise<PriceGroup[]> => {
   const response = await fetch(SHEET_URL);
 
@@ -45,6 +51,9 @@ export const getPriceList = async (): Promise<PriceGroup[]> => {
         ? row.lockId.split(",").map((id: string) => id.trim())
         : [];
 
+    const width = parseOptionalNumber(row.width);
+    const height = parseOptionalNumber(row.height);
+
     const item: PriceItem = {
       id: row.id,
       name: row.name,
@@ -52,6 +61,8 @@ export const getPriceList = async (): Promise<PriceGroup[]> => {
       unit: parseUnit(row.unit),
       lockId,
       ...(row.minCost ? { minCost: Number(row.minCost) } : {}),
+      ...(width !== undefined ? { width } : {}),
+      ...(height !== undefined ? { height } : {}),
     };
 
     if (!groups[groupName]) {
