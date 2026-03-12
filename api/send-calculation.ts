@@ -160,7 +160,7 @@ export default async function handler(req: any, res: any) {
         <li><strong>Ширина:</strong> ${inputSummary.width ?? "—"} ${
           inputSummary.unit || "м"
         }</li>
-        <li><strong>Высота:</strong> ${inputSummary.height ?? "—"} ${
+        <li><strong>Длина:</strong> ${inputSummary.height ?? "—"} ${
           inputSummary.unit || "м"
         }</li>
       </ul>

@@ -53,10 +53,10 @@ export const validationSchema = yup.object({
 
   height: yup
     .string()
-    .required("Высота обязательна")
+    .required("Длина обязательна")
     .test(
       "is-positive-number",
-      "Высота должна быть числом больше 0",
+      "Длина должна быть числом больше 0",
       (value, ctx) => {
         if (!value) return false;
         const unit: MeasurementUnits = ctx.options.context?.unit;
@@ -67,7 +67,7 @@ export const validationSchema = yup.object({
     )
     .test(
       "max-height",
-      "Высота не должна превышать допустимый максимум",
+      "Длина не должна превышать допустимый максимум",
       (value, ctx) => {
         if (!value) return true;
         const unit: MeasurementUnits = ctx.options.context?.unit;
@@ -81,7 +81,7 @@ export const validationSchema = yup.object({
         if (computedValue <= maxHeight) return true;
 
         return ctx.createError({
-          message: `Высота не должна превышать ${maxHeight} м`,
+          message: `Длина не должна превышать ${maxHeight} м`,
         });
       },
     ),
@@ -91,25 +91,23 @@ export const validationSchema = yup.object({
   cutting: yup.string().required("Выберите резку"),
   print: yup.string().required("Выберите печать"),
   patternedCuttingEnabled: yup.boolean().default(false),
-  patternedPerimeter: yup
-    .string()
-    .when("patternedCuttingEnabled", {
-      is: true,
-      then: (schema) =>
-        schema
-          .required("Периметр обязателен")
-          .test(
-            "is-positive-number",
-            "Периметр должен быть числом больше 0",
-            (value, ctx) => {
-              if (!value) return false;
-              const unit: MeasurementUnits = ctx.options.context?.unit;
-              const numberValue = parseFloat(value.replace(",", "."));
-              const computedValue =
-                MeasurementUnitsToCoefficient[unit] * numberValue;
-              return !isNaN(computedValue) && computedValue > 0;
-            },
-          ),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+  patternedPerimeter: yup.string().when("patternedCuttingEnabled", {
+    is: true,
+    then: (schema) =>
+      schema
+        .required("Периметр обязателен")
+        .test(
+          "is-positive-number",
+          "Периметр должен быть числом больше 0",
+          (value, ctx) => {
+            if (!value) return false;
+            const unit: MeasurementUnits = ctx.options.context?.unit;
+            const numberValue = parseFloat(value.replace(",", "."));
+            const computedValue =
+              MeasurementUnitsToCoefficient[unit] * numberValue;
+            return !isNaN(computedValue) && computedValue > 0;
+          },
+        ),
+    otherwise: (schema) => schema.notRequired(),
+  }),
 });

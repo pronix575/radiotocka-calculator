@@ -341,7 +341,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         />
 
         <Input
-          label="Высота"
+          label="Длина"
           name="height"
           type="number"
           isDisabled={!isMaterialSelected}
