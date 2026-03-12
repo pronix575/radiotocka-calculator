@@ -118,7 +118,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const clientName = fields.clientName || "—";
-    const clientCompany = fields.clientCompany || "—";
+    const clientPhone = fields.clientPhone || "—";
     const clientEmail = fields.clientEmail || "—";
     const message = fields.message || "";
 
@@ -131,13 +131,11 @@ export default async function handler(req: any, res: any) {
 
     const subjectParts = ["Расчет стоимости"];
     if (clientName && clientName !== "—") subjectParts.push(clientName);
-    if (clientCompany && clientCompany !== "—")
-      subjectParts.push(clientCompany);
 
     const html = `
       <h2>Расчет стоимости</h2>
       <p><strong>Имя:</strong> ${clientName}</p>
-      <p><strong>Компания:</strong> ${clientCompany}</p>
+      <p><strong>Телефон:</strong> ${clientPhone}</p>
       <p><strong>Email:</strong> ${clientEmail}</p>
       ${message ? `<p><strong>Комментарий:</strong> ${message}</p>` : ""}
       <hr />

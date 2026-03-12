@@ -30,7 +30,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   inputSummary,
 }) => {
   const [clientName, setClientName] = useState("");
-  const [clientCompany, setClientCompany] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -59,13 +59,52 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
     setFiles(selected);
   };
 
+  const normalizePhone = (value: string) => {
+    let digits = value.replace(/\D/g, "");
+    if (digits.startsWith("8")) digits = `7${digits.slice(1)}`;
+    if (!digits.startsWith("7")) digits = `7${digits}`;
+    if (digits.length > 11) digits = digits.slice(0, 11);
+    return digits;
+  };
+
+  const formatPhone = (value: string) => {
+    const digits = normalizePhone(value);
+    const rest = digits.slice(1);
+    const parts = [
+      rest.slice(0, 3),
+      rest.slice(3, 6),
+      rest.slice(6, 8),
+      rest.slice(8, 10),
+    ].filter(Boolean);
+
+    let formatted = "+7";
+    if (parts[0]) formatted += ` (${parts[0]}`;
+    if (parts[0]?.length === 3) formatted += ")";
+    if (parts[1]) formatted += ` ${parts[1]}`;
+    if (parts[2]) formatted += `-${parts[2]}`;
+    if (parts[3]) formatted += `-${parts[3]}`;
+    return formatted;
+  };
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setIsSent(false);
 
+    const phoneDigits = normalizePhone(clientPhone);
+
     if (!clientEmail) {
       setError("Введите ваш email.");
+      return;
+    }
+
+    if (!clientName) {
+      setError("Введите имя и компанию.");
+      return;
+    }
+
+    if (phoneDigits.length !== 11) {
+      setError("Введите корректный номер телефона.");
       return;
     }
 
@@ -82,7 +121,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
         }),
       );
       formData.append("clientName", clientName);
-      formData.append("clientCompany", clientCompany);
+      formData.append("clientPhone", phoneDigits);
       formData.append("clientEmail", clientEmail);
       formData.append("message", message);
       files.forEach((file) => formData.append("files", file));
@@ -179,18 +218,22 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
               </div>
 
               <form className="space-y-3" onSubmit={onSubmit}>
-                <input
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-                  placeholder="Ваше имя"
-                  value={clientName}
-                  onChange={(event) => setClientName(event.target.value)}
-                />
-                <input
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-                  placeholder="Компания"
-                  value={clientCompany}
-                  onChange={(event) => setClientCompany(event.target.value)}
-                />
+            <input
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+              placeholder="Имя (Компания)"
+              required
+              value={clientName}
+              onChange={(event) => setClientName(event.target.value)}
+            />
+            <input
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+              placeholder="Телефон"
+              type="tel"
+              inputMode="tel"
+              required
+              value={clientPhone}
+              onChange={(event) => setClientPhone(formatPhone(event.target.value))}
+            />
                 <input
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
                   placeholder="Email для связи"
