@@ -2,6 +2,7 @@ import {
   ChangeEvent,
   FC,
   FormEvent,
+  KeyboardEvent,
   ReactNode,
   useEffect,
   useRef,
@@ -34,6 +35,57 @@ interface CalculationResultPanelProps {
 
 const showSend = true; // Временно скрываем форму отправки, так как бэкенд еще не готов
 
+const PERSONAL_DATA_OPERATOR = {
+  name: "ИП Вагизов Алмаз Фаридович",
+  email: "copy@9v.ru",
+  address:
+    "427740, Удмуртская Республика, р-н Граховский, д. Яги-Какси, ул. Октябрьская, д. 43",
+  phone: "8 (843) 525-00-00",
+};
+
+const PERSONAL_DATA_POLICY_SECTIONS = [
+  {
+    title: "1. Общие положения",
+    paragraphs: [
+      `Настоящая политика применяется к персональным данным, которые пользователь предоставляет при отправке расчета через форму на сайте ${PERSONAL_DATA_OPERATOR.name}.`,
+      `Оператор персональных данных: ${PERSONAL_DATA_OPERATOR.name}, email: ${PERSONAL_DATA_OPERATOR.email}, адрес: ${PERSONAL_DATA_OPERATOR.address}, тел.: ${PERSONAL_DATA_OPERATOR.phone}.`,
+      "Оператор обрабатывает персональные данные в соответствии с законодательством Российской Федерации и только в объеме, необходимом для обработки обращения пользователя.",
+    ],
+  },
+  {
+    title: "2. Состав персональных данных",
+    paragraphs: [
+      "Оператор может обрабатывать имя или наименование компании, номер телефона, адрес электронной почты, текст комментария и прикрепленные пользователем файлы.",
+      "Сведения из формы расчета используются только в связке с обращением пользователя и необходимы для подготовки ответа.",
+    ],
+  },
+  {
+    title: "3. Цели обработки",
+    paragraphs: [
+      "Подготовка и отправка расчета, обратная связь с пользователем, уточнение деталей запроса, обработка приложенных материалов и ведение переписки по обращению.",
+    ],
+  },
+  {
+    title: "4. Правовые основания",
+    paragraphs: [
+      "Основанием обработки является согласие пользователя, выраженное путем проставления чекбокса перед отправкой формы.",
+    ],
+  },
+  {
+    title: "5. Условия обработки и хранения",
+    paragraphs: [
+      "Персональные данные обрабатываются с использованием средств автоматизации и без них, с применением необходимых организационных и технических мер защиты.",
+      "Данные хранятся не дольше, чем это требуется для обработки обращения и дальнейшего взаимодействия по нему, если иной срок не предусмотрен законодательством Российской Федерации.",
+    ],
+  },
+  {
+    title: "6. Права пользователя",
+    paragraphs: [
+      `Пользователь вправе запросить уточнение, обновление, блокирование или удаление своих персональных данных, а также отозвать согласие на их обработку, направив обращение оператору по адресу ${PERSONAL_DATA_OPERATOR.email} или по адресу: ${PERSONAL_DATA_OPERATOR.address}.`,
+    ],
+  },
+];
+
 export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   result,
   inputSummary,
@@ -45,6 +97,8 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   const [clientEmail, setClientEmail] = useState("");
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [isPolicyAccepted, setIsPolicyAccepted] = useState(false);
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSent, setIsSent] = useState(false);
@@ -117,6 +171,26 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
     };
   }, [isAreaTooltipOpen]);
 
+  useEffect(() => {
+    if (!isPolicyModalOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsPolicyModalOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isPolicyModalOpen]);
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
@@ -139,6 +213,13 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
       return;
     }
 
+    if (!isPolicyAccepted) {
+      setError(
+        "Подтвердите согласие на обработку персональных данных, чтобы отправить расчет.",
+      );
+      return;
+    }
+
     if (!result) return;
 
     setIsSending(true);
@@ -155,6 +236,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
       formData.append("clientPhone", phoneDigits);
       formData.append("clientEmail", clientEmail);
       formData.append("message", message);
+      formData.append("personalDataConsent", "accepted");
       files.forEach((file) => formData.append("files", file));
 
       const response = await fetch("/api/send-calculation", {
@@ -190,149 +272,248 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   }
 
   return (
-    <Card className="w-full rounded-xl overflow-hidden border border-gray-200 shadow-none">
-      <CardBody className=" p-4 space-y-4">
-        {/* Общие показатели */}
-        <div className="space-y-2">
-          <KeyValue
-            keyName="Общая площадь"
-            value={`${formatNumber(result.totalArea)} м²`}
-            icon={
-              <Tooltip
-                content="Площадь рассчитывается без учета технических отступов."
-                style={{ width: 200 }}
-                placement="right"
-                isOpen={isAreaTooltipOpen}
-                onOpenChange={setIsAreaTooltipOpen}
-              >
-                <button
-                  ref={areaTooltipButtonRef}
-                  type="button"
-                  aria-label="Пояснение к расчету площади"
-                  className={`inline-flex items-center justify-center rounded-full transition focus:outline-none focus:ring-2 focus:ring-[#f99160]/40 ${
-                    isAreaTooltipOpen
-                      ? "text-amber-400"
-                      : "text-gray-300 hover:text-amber-400 active:text-amber-400"
-                  }`}
-                  onClick={() => setIsAreaTooltipOpen((open) => !open)}
+    <>
+      <Card className="w-full rounded-xl overflow-hidden border border-gray-200 shadow-none">
+        <CardBody className=" p-4 space-y-4">
+          {/* Общие показатели */}
+          <div className="space-y-2">
+            <KeyValue
+              keyName="Общая площадь"
+              value={`${formatNumber(result.totalArea)} м²`}
+              icon={
+                <Tooltip
+                  content="Площадь рассчитывается без учета технических отступов."
+                  style={{ width: 200 }}
+                  placement="right"
+                  isOpen={isAreaTooltipOpen}
+                  onOpenChange={setIsAreaTooltipOpen}
                 >
-                  <QuestionCircleFill className="cursor-pointer" />
-                </button>
-              </Tooltip>
-            }
-          />
-          <KeyValue
-            keyName="Общий периметр"
-            value={`${formatNumber(result.totalPerimeter)} м`}
-          />
-        </div>
-
-        <Divider />
-        <div className="space-y-2">
-          <KeyValue
-            keyName="Материал"
-            value={`${formatMoney(result.materialCost)} ₽`}
-          />
-          <KeyValue
-            keyName="Печать"
-            value={`${formatMoney(result.printCost)} ₽`}
-          />
-          <KeyValue
-            keyName="Резка"
-            value={`${formatMoney(result.cuttingCost)} ₽`}
-          />
-        </div>
-
-        <Divider className="my-2" />
-
-        {/* Итог */}
-        <div className="flex justify-between items-center  rounded-xl">
-          <span className="text-lg font-bold text-gray-800">Итого:</span>
-          <span className="text-2xl font-extrabold text-[#d43e14]">
-            ≈ {formatMoney(result.totalPrice)} ₽
-          </span>
-        </div>
-
-        {showSend && (
-          <>
-            <Divider className="my-2" />
-
-            <div className="space-y-3">
-              <div className="text-sm font-semibold text-gray-800">
-                Отправить расчет
-              </div>
-
-              <form className="space-y-3" onSubmit={onSubmit}>
-            <input
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-              placeholder="Имя (Компания)"
-              required
-              value={clientName}
-              onChange={(event) => setClientName(event.target.value)}
+                  <button
+                    ref={areaTooltipButtonRef}
+                    type="button"
+                    aria-label="Пояснение к расчету площади"
+                    className={`inline-flex items-center justify-center rounded-full transition focus:outline-none focus:ring-2 focus:ring-[#f99160]/40 ${
+                      isAreaTooltipOpen
+                        ? "text-amber-400"
+                        : "text-gray-300 hover:text-amber-400 active:text-amber-400"
+                    }`}
+                    onClick={() => setIsAreaTooltipOpen((open) => !open)}
+                  >
+                    <QuestionCircleFill className="cursor-pointer" />
+                  </button>
+                </Tooltip>
+              }
             />
-            <input
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-              placeholder="Телефон"
-              type="tel"
-              inputMode="tel"
-              required
-              value={clientPhone}
-              onChange={(event) => setClientPhone(formatPhone(event.target.value))}
+            <KeyValue
+              keyName="Общий периметр"
+              value={`${formatNumber(result.totalPerimeter)} м`}
             />
-                <input
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-                  placeholder="Email для связи"
-                  type="email"
-                  required
-                  value={clientEmail}
-                  onChange={(event) => setClientEmail(event.target.value)}
-                />
-                <textarea
-                  className="min-h-[90px] w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-                  placeholder="Комментарий"
-                  value={message}
-                  onChange={(event) => setMessage(event.target.value)}
-                />
+          </div>
 
-                <div className="space-y-1 text-xs text-gray-500">
-                  <input
-                    className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-xs file:font-medium file:text-gray-700 hover:file:bg-gray-200"
-                    type="file"
-                    multiple
-                    onChange={onFilesChange}
-                  />
-                  <div>До {MAX_FILES} файлов, максимум 10 МБ каждый.</div>
-                  {files.length > 0 && (
-                    <div className="text-xs text-gray-600">
-                      Выбрано файлов: {files.length}
-                    </div>
-                  )}
+          <Divider />
+          <div className="space-y-2">
+            <KeyValue
+              keyName="Материал"
+              value={`${formatMoney(result.materialCost)} ₽`}
+            />
+            <KeyValue
+              keyName="Печать"
+              value={`${formatMoney(result.printCost)} ₽`}
+            />
+            <KeyValue
+              keyName="Резка"
+              value={`${formatMoney(result.cuttingCost)} ₽`}
+            />
+          </div>
+
+          <Divider className="my-2" />
+
+          {/* Итог */}
+          <div className="flex justify-between items-center  rounded-xl">
+            <span className="text-lg font-bold text-gray-800">Итого:</span>
+            <span className="text-2xl font-extrabold text-[#d43e14]">
+              ≈ {formatMoney(result.totalPrice)} ₽
+            </span>
+          </div>
+
+          {showSend && (
+            <>
+              <Divider className="my-2" />
+
+              <div className="space-y-3">
+                <div className="text-sm font-semibold text-gray-800">
+                  Отправить расчет
                 </div>
 
-                {error && (
-                  <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
-                    {error}
-                  </div>
-                )}
-                {isSent && (
-                  <div className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-600">
-                    Письмо отправлено. Мы свяжемся с вами.
-                  </div>
-                )}
+                <form className="space-y-3" onSubmit={onSubmit}>
+                  <input
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+                    placeholder="Имя (Компания)"
+                    required
+                    value={clientName}
+                    onChange={(event) => setClientName(event.target.value)}
+                  />
+                  <input
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+                    placeholder="Телефон"
+                    type="tel"
+                    inputMode="tel"
+                    required
+                    value={clientPhone}
+                    onChange={(event) =>
+                      setClientPhone(formatPhone(event.target.value))
+                    }
+                  />
+                  <input
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+                    placeholder="Email для связи"
+                    type="email"
+                    required
+                    value={clientEmail}
+                    onChange={(event) => setClientEmail(event.target.value)}
+                  />
+                  <textarea
+                    className="min-h-[90px] w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+                    placeholder="Комментарий"
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                  />
 
-                <button
-                  className="w-full rounded-lg bg-gradient-to-r from-[#f99160] to-[#d43e14] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-300"
-                  type="submit"
-                  disabled={isSending}
+                  <div className="space-y-1 text-xs text-gray-500">
+                    <input
+                      className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-xs file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+                      type="file"
+                      multiple
+                      onChange={onFilesChange}
+                    />
+                    <div>До {MAX_FILES} файлов, максимум 10 МБ каждый.</div>
+                    {files.length > 0 && (
+                      <div className="text-xs text-gray-600">
+                        Выбрано файлов: {files.length}
+                      </div>
+                    )}
+                  </div>
+
+                  <label className="flex items-start gap-3 rounded-lg border border-gray-200 px-3 py-3 text-sm text-gray-700">
+                    <input
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-[#d43e14] focus:ring-[#f99160]/50"
+                      type="checkbox"
+                      checked={isPolicyAccepted}
+                      onChange={(event) =>
+                        setIsPolicyAccepted(event.currentTarget.checked)
+                      }
+                      required
+                    />
+                    <span className="min-w-0 text-left leading-6">
+                      Я принимаю{" "}
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="appearance-none border-0 bg-transparent p-0 font-medium text-[#d43e14] underline decoration-from-font underline-offset-2 transition hover:text-[#b73512] focus:outline-none"
+                        onClick={() => setIsPolicyModalOpen(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setIsPolicyModalOpen(true);
+                          }
+                        }}
+                        aria-pressed="false"
+                      >
+                        политику обработки персональных данных
+                      </span>
+                    </span>
+                  </label>
+
+                  {error && (
+                    <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
+                      {error}
+                    </div>
+                  )}
+                  {isSent && (
+                    <div className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-600">
+                      Письмо отправлено. Мы свяжемся с вами.
+                    </div>
+                  )}
+
+                  <button
+                    className="w-full rounded-lg bg-gradient-to-r from-[#f99160] to-[#d43e14] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-300"
+                    type="submit"
+                    disabled={isSending}
+                  >
+                    {isSending ? "Отправляем..." : "Отправить расчет"}
+                  </button>
+                </form>
+              </div>
+            </>
+          )}
+        </CardBody>
+      </Card>
+
+      {isPolicyModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+          onClick={() => setIsPolicyModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="personal-data-policy-title"
+            className="max-h-full w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
+              if (event.key === "Escape") {
+                setIsPolicyModalOpen(false);
+              }
+            }}
+          >
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+              <div>
+                <h3
+                  className="text-lg font-semibold text-gray-900"
+                  id="personal-data-policy-title"
                 >
-                  {isSending ? "Отправляем..." : "Отправить расчет"}
-                </button>
-              </form>
+                  Политика обработки персональных данных
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Редакция для формы отправки расчета на сайте
+                </p>
+              </div>
+              <button
+                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                type="button"
+                aria-label="Закрыть политику"
+                onClick={() => setIsPolicyModalOpen(false)}
+              >
+                ×
+              </button>
             </div>
-          </>
-        )}
-      </CardBody>
-    </Card>
+
+            <div className="max-h-[70vh] space-y-5 overflow-y-auto px-5 py-4 text-sm leading-6 text-gray-700">
+              {PERSONAL_DATA_POLICY_SECTIONS.map((section) => (
+                <section className="space-y-2" key={section.title}>
+                  <h4 className="font-semibold text-gray-900">
+                    {section.title}
+                  </h4>
+                  {section.paragraphs.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </section>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-200 px-5 py-4">
+              <button
+                className="rounded-lg bg-gradient-to-r from-[#f99160] to-[#d43e14] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95"
+                type="button"
+                onClick={() => setIsPolicyModalOpen(false)}
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

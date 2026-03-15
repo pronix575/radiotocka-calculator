@@ -198,6 +198,35 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       return item.lockId.includes(selectedMaterial);
     }) ?? [];
 
+  const selectedMaterialItem = materialGroup?.items.find(
+    (item) => item.id === selectedMaterial,
+  );
+  const selectedCuttingItem = cuttingGroup?.items.find(
+    (item) => item.id === formik.values.cutting,
+  );
+  const selectedPrintItem = printGroup?.items.find(
+    (item) => item.id === formik.values.print,
+  );
+
+  const maxWidth = getMaxDimension(
+    [selectedMaterialItem, selectedCuttingItem, selectedPrintItem],
+    "width",
+    DEFAULT_MAX_WIDTH_M,
+  );
+  const maxHeight = getMaxDimension(
+    [selectedMaterialItem, selectedCuttingItem, selectedPrintItem],
+    "height",
+    DEFAULT_MAX_HEIGHT_M,
+  );
+
+  const formatDimensionLimit = (dimensionInMeters: number) => {
+    const currentUnit = formik.values.unit;
+    const convertedValue =
+      dimensionInMeters / MeasurementUnitsToCoefficient[currentUnit];
+
+    return `${formatNumber(convertedValue)} ${MeasurementUnitsTranslate[currentUnit]}`;
+  };
+
   useEffect(() => {
     if (
       formik.values.cutting &&
@@ -329,7 +358,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         </div>
 
         <Input
-          label="Ширина"
+          label={`Ширина (до ${formatDimensionLimit(maxWidth)})`}
           name="width"
           type="number"
           isDisabled={!isMaterialSelected}
@@ -344,7 +373,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         />
 
         <Input
-          label="Длина"
+          label={`Длина (до ${formatDimensionLimit(maxHeight)})`}
           name="height"
           type="number"
           isDisabled={!isMaterialSelected}

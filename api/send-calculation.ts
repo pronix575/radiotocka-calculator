@@ -122,6 +122,8 @@ export default async function handler(req: any, res: any) {
     const clientPhone = fields.clientPhone || "—";
     const clientEmail = fields.clientEmail || "—";
     const message = fields.message || "";
+    const personalDataConsent =
+      fields.personalDataConsent === "accepted" ? "Подтверждено" : "Нет";
 
     const inputSummary = calculation.inputSummary || {};
     const result = calculation.result || {};
@@ -138,6 +140,7 @@ export default async function handler(req: any, res: any) {
       <p><strong>Имя:</strong> ${clientName}</p>
       <p><strong>Телефон:</strong> ${clientPhone}</p>
       <p><strong>Email:</strong> ${clientEmail}</p>
+      <p><strong>Согласие на обработку персональных данных:</strong> ${personalDataConsent}</p>
       ${message ? `<p><strong>Комментарий:</strong> ${message}</p>` : ""}
       <hr />
       <h3>Параметры</h3>
