@@ -23,6 +23,7 @@ import {
   MeasurementUnitsToCoefficient,
   MeasurementUnitsTranslate,
 } from "@/calculator/calculatorService.constants";
+import { formatMoney, formatNumber } from "../../../../shared/formatters";
 
 export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
   priceList,
@@ -158,7 +159,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
       const numeric = Number(value);
       if (isNaN(numeric)) return "";
 
-      return ((numeric * prevCoef) / nextCoef).toFixed(2).toString();
+      return formatNumber((numeric * prevCoef) / nextCoef);
     };
 
     formik.setValues({
@@ -254,6 +255,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           <Select
             label="Материал"
             placeholder="Выберите материал"
+            listboxProps={{ emptyContent: "Нет данных" }}
             selectedKeys={selectedMaterialBase ? [selectedMaterialBase] : []}
             onSelectionChange={(keys) => {
               const value = Array.from(keys)[0] as string;
@@ -279,6 +281,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           <Select
             label="Толщина"
             placeholder="Выберите толщину"
+            listboxProps={{ emptyContent: "Нет данных" }}
             isDisabled={!isMaterialBaseSelected}
             selectedKeys={selectedMaterial ? [selectedMaterial] : []}
             onSelectionChange={(keys) => {
@@ -293,7 +296,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           >
             {thicknessOptions.map((item) => {
               const { thickness } = parseMaterialName(item.name);
-              const label = `${thickness || item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
+              const label = `${thickness || item.name} (${formatMoney(item.price)}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${formatMoney(item.minCost)}₽` : ""}`;
 
               return (
                 <SelectItem key={item.id} textValue={label}>
@@ -404,6 +407,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         <Select
           label="Резка"
           placeholder="Выберите резку"
+          listboxProps={{ emptyContent: "Нет данных" }}
           isDisabled={!isMaterialSelected}
           selectedKeys={formik.values.cutting ? [formik.values.cutting] : []}
           onSelectionChange={(keys) => {
@@ -411,14 +415,13 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
             formik.setFieldValue("cutting", value);
             formik.setFieldTouched("cutting", true, false);
           }}
-          nonce="Нет данных"
           isInvalid={shouldShowError("cutting")}
           errorMessage={
             shouldShowError("cutting") ? formik.errors.cutting : undefined
           }
         >
           {filteredCuttingItems.map((item) => {
-            const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
+            const label = `${item.name} (${formatMoney(item.price)}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${formatMoney(item.minCost)}₽` : ""}`;
 
             return (
               <SelectItem key={item.id} textValue={label}>
@@ -434,6 +437,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
         <Select
           label="Печать"
           placeholder="Выберите печать"
+          listboxProps={{ emptyContent: "Нет данных" }}
           isDisabled={!isMaterialSelected}
           selectedKeys={formik.values.print ? [formik.values.print] : []}
           onSelectionChange={(keys) => {
@@ -447,7 +451,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
           }
         >
           {filteredPrintItems.map((item) => {
-            const label = `${item.name} (${item.price}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${item.minCost}₽` : ""}`;
+            const label = `${item.name} (${formatMoney(item.price)}₽ / ${UnitTranslations[item.unit as Unit]})${item.minCost ? `, мин. ${formatMoney(item.minCost)}₽` : ""}`;
 
             return (
               <SelectItem key={item.id} textValue={label}>

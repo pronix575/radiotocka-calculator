@@ -1,10 +1,19 @@
-import { ChangeEvent, FC, FormEvent, ReactNode, useState } from "react";
+import {
+  ChangeEvent,
+  FC,
+  FormEvent,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Tooltip } from "@heroui/tooltip";
 import { QuestionCircleFill } from "react-bootstrap-icons";
 
 import { CalculationResult } from "../../calculatorService.utils";
+import { formatMoney, formatNumber } from "../../../../shared/formatters";
 
 interface CalculationInputSummary {
   amount: number;
@@ -29,6 +38,8 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   result,
   inputSummary,
 }) => {
+  const [isAreaTooltipOpen, setIsAreaTooltipOpen] = useState(false);
+  const areaTooltipButtonRef = useRef<HTMLButtonElement | null>(null);
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -85,6 +96,26 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
     if (parts[3]) formatted += `-${parts[3]}`;
     return formatted;
   };
+
+  useEffect(() => {
+    if (!isAreaTooltipOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        areaTooltipButtonRef.current &&
+        event.target instanceof Node &&
+        !areaTooltipButtonRef.current.contains(event.target)
+      ) {
+        setIsAreaTooltipOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isAreaTooltipOpen]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -165,20 +196,34 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
         <div className="space-y-2">
           <KeyValue
             keyName="Общая площадь"
-            value={`${result.totalArea.toFixed(2)} м²`}
+            value={`${formatNumber(result.totalArea)} м²`}
             icon={
               <Tooltip
-                content={`Площадь рассчитывается без учета \n технических отступов.`}
+                content="Площадь рассчитывается без учета технических отступов."
                 style={{ width: 200 }}
                 placement="right"
+                isOpen={isAreaTooltipOpen}
+                onOpenChange={setIsAreaTooltipOpen}
               >
-                <QuestionCircleFill className="text-gray-300 hover:text-amber-400 transition cursor-pointer" />
+                <button
+                  ref={areaTooltipButtonRef}
+                  type="button"
+                  aria-label="Пояснение к расчету площади"
+                  className={`inline-flex items-center justify-center rounded-full transition focus:outline-none focus:ring-2 focus:ring-[#f99160]/40 ${
+                    isAreaTooltipOpen
+                      ? "text-amber-400"
+                      : "text-gray-300 hover:text-amber-400 active:text-amber-400"
+                  }`}
+                  onClick={() => setIsAreaTooltipOpen((open) => !open)}
+                >
+                  <QuestionCircleFill className="cursor-pointer" />
+                </button>
               </Tooltip>
             }
           />
           <KeyValue
             keyName="Общий периметр"
-            value={`${result.totalPerimeter.toFixed(2)} м`}
+            value={`${formatNumber(result.totalPerimeter)} м`}
           />
         </div>
 
@@ -186,15 +231,15 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
         <div className="space-y-2">
           <KeyValue
             keyName="Материал"
-            value={`${result.materialCost.toFixed(2)} ₽`}
+            value={`${formatMoney(result.materialCost)} ₽`}
           />
           <KeyValue
             keyName="Печать"
-            value={`${result.printCost.toFixed(2)} ₽`}
+            value={`${formatMoney(result.printCost)} ₽`}
           />
           <KeyValue
             keyName="Резка"
-            value={`${result.cuttingCost.toFixed(2)} ₽`}
+            value={`${formatMoney(result.cuttingCost)} ₽`}
           />
         </div>
 
@@ -204,7 +249,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
         <div className="flex justify-between items-center  rounded-xl">
           <span className="text-lg font-bold text-gray-800">Итого:</span>
           <span className="text-2xl font-extrabold text-[#d43e14]">
-            ≈ {result.totalPrice.toFixed(2)} ₽
+            ≈ {formatMoney(result.totalPrice)} ₽
           </span>
         </div>
 

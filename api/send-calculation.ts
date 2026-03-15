@@ -1,6 +1,7 @@
 import Busboy from "busboy";
 import { Resend } from "resend";
 import punycode from "punycode/punycode.js";
+import { formatMoney, formatNumber } from "../shared/formatters";
 
 type ParsedForm = {
   fields: Record<string, string>;
@@ -150,37 +151,41 @@ export default async function handler(req: any, res: any) {
         ${
           patternedCuttingEnabled
             ? `<li><strong>Периметр (узорная):</strong> ${
-                patternedPerimeter || "—"
+                patternedPerimeter ? formatNumber(patternedPerimeter) : "—"
               } ${inputSummary.unit || "м"}</li>`
             : ""
         }
         <li><strong>Количество:</strong> ${inputSummary.amount ?? "—"}</li>
-        <li><strong>Ширина:</strong> ${inputSummary.width ?? "—"} ${
+        <li><strong>Ширина:</strong> ${
+          inputSummary.width ? formatNumber(inputSummary.width) : "—"
+        } ${
           inputSummary.unit || "м"
         }</li>
-        <li><strong>Длина:</strong> ${inputSummary.height ?? "—"} ${
+        <li><strong>Длина:</strong> ${
+          inputSummary.height ? formatNumber(inputSummary.height) : "—"
+        } ${
           inputSummary.unit || "м"
         }</li>
       </ul>
       <h3>Результат</h3>
       <ul>
-        <li><strong>Площадь:</strong> ${Number(result.totalArea ?? 0).toFixed(
-          2,
+        <li><strong>Площадь:</strong> ${formatNumber(
+          Number(result.totalArea ?? 0),
         )} м²</li>
-        <li><strong>Периметр:</strong> ${Number(
-          result.totalPerimeter ?? 0,
-        ).toFixed(2)} м</li>
-        <li><strong>Материал:</strong> ${Number(
-          result.materialCost ?? 0,
-        ).toFixed(2)} ₽</li>
-        <li><strong>Печать:</strong> ${Number(result.printCost ?? 0).toFixed(
-          2,
+        <li><strong>Периметр:</strong> ${formatNumber(
+          Number(result.totalPerimeter ?? 0),
+        )} м</li>
+        <li><strong>Материал:</strong> ${formatMoney(
+          Number(result.materialCost ?? 0),
         )} ₽</li>
-        <li><strong>Резка:</strong> ${Number(result.cuttingCost ?? 0).toFixed(
-          2,
+        <li><strong>Печать:</strong> ${formatMoney(
+          Number(result.printCost ?? 0),
         )} ₽</li>
-        <li><strong>Итого:</strong> ${Number(result.totalPrice ?? 0).toFixed(
-          2,
+        <li><strong>Резка:</strong> ${formatMoney(
+          Number(result.cuttingCost ?? 0),
+        )} ₽</li>
+        <li><strong>Итого:</strong> ${formatMoney(
+          Number(result.totalPrice ?? 0),
         )} ₽</li>
       </ul>
     `;
