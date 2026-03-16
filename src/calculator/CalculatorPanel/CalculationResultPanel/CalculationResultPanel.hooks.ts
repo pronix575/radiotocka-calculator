@@ -167,7 +167,9 @@ export const useCalculationResultPanel = ({
       formData.append("clientEmail", clientEmail);
       formData.append("message", message);
       formData.append("personalDataConsent", "accepted");
-      formData.append("sourcePageUrl", getEmbedPageUrl());
+      const { pageUrl, siteHost } = getEmbedPageUrl();
+      formData.append("sourcePageUrl", pageUrl);
+      formData.append("sourceSiteHost", siteHost);
       files.forEach((file) => formData.append("files", file));
 
       const response = await fetch("/api/send-calculation", {

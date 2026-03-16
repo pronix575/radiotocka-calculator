@@ -4,11 +4,46 @@ import * as Flags from "country-flag-icons/react/3x2";
 import { PhoneCountry } from "./CalculationResultPanel.constants";
 
 export const getEmbedPageUrl = () => {
-  if (typeof document === "undefined") {
-    return "";
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return { pageUrl: "", siteHost: "" };
   }
 
-  return document.referrer || window.location.href;
+  const currentOrigin = window.location.origin;
+  const candidates = [
+    document.referrer,
+    ...Array.from(window.location.ancestorOrigins || []),
+  ].filter(Boolean);
+
+  try {
+    if (window.top && window.top !== window) {
+      candidates.push(window.top.location.href);
+    }
+  } catch {
+    // Ignore cross-origin access errors and continue with safe fallbacks.
+  }
+
+  const externalUrl =
+    candidates.find((candidate) => {
+      try {
+        return new URL(candidate).origin !== currentOrigin;
+      } catch {
+        return false;
+      }
+    }) || document.referrer;
+
+  const pageUrl = externalUrl || window.location.href;
+
+  try {
+    return {
+      pageUrl,
+      siteHost: new URL(pageUrl).hostname,
+    };
+  } catch {
+    return {
+      pageUrl,
+      siteHost: "",
+    };
+  }
 };
 
 export const getSelectedCountryCode = (keys: "all" | Set<Key>) => {
@@ -50,7 +85,10 @@ export const normalizePhone = (value: string, country: PhoneCountry) => {
     digits = digits.slice(1);
   }
 
-  if (digits.length > country.maxDigits && digits.startsWith(country.dialCode)) {
+  if (
+    digits.length > country.maxDigits &&
+    digits.startsWith(country.dialCode)
+  ) {
     digits = digits.slice(country.dialCode.length);
   }
 
