@@ -2,7 +2,6 @@ import {
   ChangeEvent,
   FC,
   FormEvent,
-  KeyboardEvent,
   ReactNode,
   useEffect,
   useRef,
@@ -14,6 +13,16 @@ import { Tooltip } from "@heroui/tooltip";
 import { QuestionCircleFill } from "react-bootstrap-icons";
 
 import { CalculationResult } from "../../calculatorService.utils";
+import {
+  MAX_FILES,
+  MAX_FILE_SIZE,
+  PERSONAL_DATA_POLICY_SECTIONS,
+  PHONE_COUNTRIES,
+  PHONE_COUNTRIES_BY_CODE,
+  PhoneCountry,
+  SHOW_SEND,
+  SORTED_PHONE_COUNTRIES,
+} from "./CalculationResultPanel.constants";
 import { formatMoney, formatNumber } from "../../../../shared/formatters";
 
 interface CalculationInputSummary {
@@ -33,67 +42,16 @@ interface CalculationResultPanelProps {
   inputSummary: CalculationInputSummary | null;
 }
 
-const showSend = true; // Временно скрываем форму отправки, так как бэкенд еще не готов
-
-const PERSONAL_DATA_OPERATOR = {
-  name: "ИП Вагизов Алмаз Фаридович",
-  email: "copy@9v.ru",
-  address:
-    "427740, Удмуртская Республика, р-н Граховский, д. Яги-Какси, ул. Октябрьская, д. 43",
-  phone: "8 (843) 525-00-00",
-};
-
-const PERSONAL_DATA_POLICY_SECTIONS = [
-  {
-    title: "1. Общие положения",
-    paragraphs: [
-      `Настоящая политика применяется к персональным данным, которые пользователь предоставляет при отправке расчета через форму на сайте ${PERSONAL_DATA_OPERATOR.name}.`,
-      `Оператор персональных данных: ${PERSONAL_DATA_OPERATOR.name}, email: ${PERSONAL_DATA_OPERATOR.email}, адрес: ${PERSONAL_DATA_OPERATOR.address}, тел.: ${PERSONAL_DATA_OPERATOR.phone}.`,
-      "Оператор обрабатывает персональные данные в соответствии с законодательством Российской Федерации и только в объеме, необходимом для обработки обращения пользователя.",
-    ],
-  },
-  {
-    title: "2. Состав персональных данных",
-    paragraphs: [
-      "Оператор может обрабатывать имя или наименование компании, номер телефона, адрес электронной почты, текст комментария и прикрепленные пользователем файлы.",
-      "Сведения из формы расчета используются только в связке с обращением пользователя и необходимы для подготовки ответа.",
-    ],
-  },
-  {
-    title: "3. Цели обработки",
-    paragraphs: [
-      "Подготовка и отправка расчета, обратная связь с пользователем, уточнение деталей запроса, обработка приложенных материалов и ведение переписки по обращению.",
-    ],
-  },
-  {
-    title: "4. Правовые основания",
-    paragraphs: [
-      "Основанием обработки является согласие пользователя, выраженное путем проставления чекбокса перед отправкой формы.",
-    ],
-  },
-  {
-    title: "5. Условия обработки и хранения",
-    paragraphs: [
-      "Персональные данные обрабатываются с использованием средств автоматизации и без них, с применением необходимых организационных и технических мер защиты.",
-      "Данные хранятся не дольше, чем это требуется для обработки обращения и дальнейшего взаимодействия по нему, если иной срок не предусмотрен законодательством Российской Федерации.",
-    ],
-  },
-  {
-    title: "6. Права пользователя",
-    paragraphs: [
-      `Пользователь вправе запросить уточнение, обновление, блокирование или удаление своих персональных данных, а также отозвать согласие на их обработку, направив обращение оператору по адресу ${PERSONAL_DATA_OPERATOR.email} или по адресу: ${PERSONAL_DATA_OPERATOR.address}.`,
-    ],
-  },
-];
-
 export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   result,
   inputSummary,
 }) => {
   const [isAreaTooltipOpen, setIsAreaTooltipOpen] = useState(false);
   const areaTooltipButtonRef = useRef<HTMLButtonElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [selectedCountryCode, setSelectedCountryCode] = useState("RU");
   const [clientEmail, setClientEmail] = useState("");
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -102,9 +60,6 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSent, setIsSent] = useState(false);
-
-  const MAX_FILES = 5;
-  const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   const onFilesChange = (event: ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -124,31 +79,47 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
     setFiles(selected);
   };
 
-  const normalizePhone = (value: string) => {
+  const selectedCountry =
+    PHONE_COUNTRIES_BY_CODE.get(selectedCountryCode) ?? PHONE_COUNTRIES[0];
+
+  const normalizePhone = (value: string, country: PhoneCountry) => {
     let digits = value.replace(/\D/g, "");
-    if (digits.startsWith("8")) digits = `7${digits.slice(1)}`;
-    if (!digits.startsWith("7")) digits = `7${digits}`;
-    if (digits.length > 11) digits = digits.slice(0, 11);
+
+    if (["RU", "KZ"].includes(country.code) && digits.startsWith("8")) {
+      digits = digits.slice(1);
+    }
+
+    if (digits.startsWith(country.dialCode)) {
+      digits = digits.slice(country.dialCode.length);
+    }
+
+    if (digits.length > country.maxDigits) {
+      digits = digits.slice(0, country.maxDigits);
+    }
+
     return digits;
   };
 
-  const formatPhone = (value: string) => {
-    const digits = normalizePhone(value);
-    const rest = digits.slice(1);
-    const parts = [
-      rest.slice(0, 3),
-      rest.slice(3, 6),
-      rest.slice(6, 8),
-      rest.slice(8, 10),
-    ].filter(Boolean);
+  const formatPhone = (value: string, country: PhoneCountry) => {
+    const digits = normalizePhone(value, country);
+    const parts: string[] = [];
+    let offset = 0;
 
-    let formatted = "+7";
-    if (parts[0]) formatted += ` (${parts[0]}`;
-    if (parts[0]?.length === 3) formatted += ")";
-    if (parts[1]) formatted += ` ${parts[1]}`;
-    if (parts[2]) formatted += `-${parts[2]}`;
-    if (parts[3]) formatted += `-${parts[3]}`;
-    return formatted;
+    if (country.groups?.length) {
+      country.groups.forEach((groupSize) => {
+        const part = digits.slice(offset, offset + groupSize);
+        if (part) {
+          parts.push(part);
+          offset += groupSize;
+        }
+      });
+    }
+
+    if (offset < digits.length) {
+      parts.push(digits.slice(offset));
+    }
+
+    return parts.join(" ");
   };
 
   useEffect(() => {
@@ -196,7 +167,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
     setError(null);
     setIsSent(false);
 
-    const phoneDigits = normalizePhone(clientPhone);
+    const phoneDigits = normalizePhone(clientPhone, selectedCountry);
 
     if (!clientEmail) {
       setError("Введите ваш email.");
@@ -208,7 +179,10 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
       return;
     }
 
-    if (phoneDigits.length !== 11) {
+    if (
+      phoneDigits.length < selectedCountry.minDigits ||
+      phoneDigits.length > selectedCountry.maxDigits
+    ) {
       setError("Введите корректный номер телефона.");
       return;
     }
@@ -233,7 +207,10 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
         }),
       );
       formData.append("clientName", clientName);
-      formData.append("clientPhone", phoneDigits);
+      formData.append(
+        "clientPhone",
+        `+${selectedCountry.dialCode}${phoneDigits}`,
+      );
       formData.append("clientEmail", clientEmail);
       formData.append("message", message);
       formData.append("personalDataConsent", "accepted");
@@ -252,6 +229,9 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
       setIsSent(true);
       setMessage("");
       setFiles([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     } catch (sendError) {
       setError(
         sendError instanceof Error
@@ -336,7 +316,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
             </span>
           </div>
 
-          {showSend && (
+          {SHOW_SEND && (
             <>
               <Divider className="my-2" />
 
@@ -348,25 +328,56 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                 <form className="space-y-3" onSubmit={onSubmit}>
                   <input
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-                    placeholder="Имя (Компания)"
+                    placeholder="Ваше имя"
                     required
                     value={clientName}
                     onChange={(event) => setClientName(event.target.value)}
                   />
+                  <div className="flex w-full overflow-hidden rounded-lg border border-gray-200 focus-within:border-[#d43e14] focus-within:ring-2 focus-within:ring-[#f99160]/40">
+                    <div className="relative shrink-0 border-r border-gray-200 bg-gray-50">
+                      <select
+                        className="h-full appearance-none bg-transparent py-2 pl-3 pr-9 text-sm text-gray-800 outline-none"
+                        aria-label="Код страны"
+                        value={selectedCountryCode}
+                        onChange={(event) => {
+                          const nextCountryCode = event.target.value;
+                          const nextCountry =
+                            PHONE_COUNTRIES_BY_CODE.get(nextCountryCode) ??
+                            PHONE_COUNTRIES[0];
+
+                          setSelectedCountryCode(nextCountryCode);
+                          setClientPhone((currentPhone) =>
+                            formatPhone(currentPhone, nextCountry),
+                          );
+                        }}
+                      >
+                        {SORTED_PHONE_COUNTRIES.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.flag} +{country.dialCode} {country.name}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                        ▼
+                      </span>
+                    </div>
+                    <input
+                      className="min-w-0 flex-1 px-3 py-2 text-sm outline-none"
+                      placeholder="Ваш номер телефона"
+                      type="tel"
+                      inputMode="tel"
+                      required
+                      value={clientPhone}
+                      onChange={(event) =>
+                        setClientPhone(
+                          formatPhone(event.target.value, selectedCountry),
+                        )
+                      }
+                    />
+                  </div>
                   <input
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-                    placeholder="Телефон"
-                    type="tel"
-                    inputMode="tel"
-                    required
-                    value={clientPhone}
-                    onChange={(event) =>
-                      setClientPhone(formatPhone(event.target.value))
-                    }
-                  />
-                  <input
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-                    placeholder="Email для связи"
+                    placeholder="Ваша почта"
                     type="email"
                     required
                     value={clientEmail}
@@ -374,18 +385,22 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                   />
                   <textarea
                     className="min-h-[90px] w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-                    placeholder="Комментарий"
+                    placeholder="Ваш комментарий"
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
                   />
 
                   <div className="space-y-1 text-xs text-gray-500">
-                    <input
-                      className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-xs file:font-medium file:text-gray-700 hover:file:bg-gray-200"
-                      type="file"
-                      multiple
-                      onChange={onFilesChange}
-                    />
+                    <label className="inline-flex cursor-pointer items-center rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-200">
+                      <input
+                        ref={fileInputRef}
+                        className="sr-only"
+                        type="file"
+                        multiple
+                        onChange={onFilesChange}
+                      />
+                      Загрузить ваш макет
+                    </label>
                     <div>До {MAX_FILES} файлов, максимум 10 МБ каждый.</div>
                     {files.length > 0 && (
                       <div className="text-xs text-gray-600">
@@ -450,21 +465,18 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
       </Card>
 
       {isPolicyModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
-          onClick={() => setIsPolicyModalOpen(false)}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
+          <button
+            type="button"
+            aria-label="Закрыть политику обработки персональных данных"
+            className="absolute inset-0 cursor-default"
+            onClick={() => setIsPolicyModalOpen(false)}
+          />
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="personal-data-policy-title"
-            className="max-h-full w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-            onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
-              if (event.key === "Escape") {
-                setIsPolicyModalOpen(false);
-              }
-            }}
+            className="relative z-10 max-h-full w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
               <div>
