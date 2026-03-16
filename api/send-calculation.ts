@@ -227,12 +227,7 @@ const CalculationEmail = ({
           createElement(
             Heading,
             { as: "h1", style: title },
-            "Новый расчет стоимости",
-          ),
-          createElement(
-            Text,
-            { style: lead },
-            "Аккуратная сводка по заявке клиента с параметрами расчета и итоговой стоимостью.",
+            "Расчет стоимости",
           ),
           createElement(Hr, { style: divider }),
           createElement(
