@@ -462,6 +462,8 @@ const toAsciiEmail = (email: string) => {
   return `${local}@${asciiDomain}`;
 };
 
+const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     sendJson(res, 405, { error: "Method not allowed" });
@@ -520,6 +522,25 @@ export default async function handler(req: any, res: any) {
       replyTo: clientEmail !== "—" ? clientEmail : undefined,
       attachments: files,
     });
+
+    if (clientEmail !== "—" && isValidEmail(clientEmail)) {
+      await resend.emails.send({
+        from: toAsciiEmail(fromEmailRaw),
+        to: toAsciiEmail(clientEmail),
+        subject: subjectParts.join(" — "),
+        react: CalculationEmail({
+          sourcePageUrl,
+          clientName,
+          clientPhone,
+          clientEmail,
+          message,
+          personalDataConsent,
+          inputSummary,
+          result,
+        }),
+        attachments: files,
+      });
+    }
 
     sendJson(res, 200, { ok: true });
   } catch (error) {
