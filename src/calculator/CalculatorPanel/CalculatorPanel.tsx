@@ -43,7 +43,7 @@ export const CalculatorPanel: FC<CalculatorPanelProps> = ({ priceList }) => {
   }, [formValues, priceList]);
 
   return (
-    <div className="flex flex-col justify-center p-6 max-w-6xl mx-auto gap-4 md:flex-row md:gap-x-4">
+    <div className="flex flex-col justify-center p-4 max-w-6xl mx-auto gap-4 md:flex-row md:gap-x-4">
       <div className="w-full md:flex-1">
         <ProductionUnitForm
           priceList={priceList}

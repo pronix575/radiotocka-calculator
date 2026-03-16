@@ -568,6 +568,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
           size="2xl"
           scrollBehavior="inside"
           onOpenChange={setIsPolicyModalOpen}
+          style={{ height: 600 }}
         >
           <ModalContent>
             <ModalHeader className="text-lg font-semibold text-gray-900">
