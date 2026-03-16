@@ -2,13 +2,18 @@ import {
   ChangeEvent,
   FC,
   FormEvent,
+  Key,
   ReactNode,
   useEffect,
   useRef,
   useState,
 } from "react";
+import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { Divider } from "@heroui/divider";
+import { Input, Textarea } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import { Switch } from "@heroui/switch";
 import { Tooltip } from "@heroui/tooltip";
 import { QuestionCircleFill } from "react-bootstrap-icons";
 
@@ -48,6 +53,19 @@ const getEmbedPageUrl = () => {
   }
 
   return document.referrer || window.location.href;
+};
+
+const getCountryFlagUrl = (countryCode: string) =>
+  `https://flagcdn.com/24x18/${countryCode.toLowerCase()}.png`;
+
+const getSelectedCountryCode = (keys: "all" | Set<Key>) => {
+  if (keys === "all") {
+    return null;
+  }
+
+  const firstKey = keys.values().next().value;
+
+  return firstKey ? String(firstKey) : null;
 };
 
 export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
@@ -128,6 +146,14 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
     }
 
     return parts.join(" ");
+  };
+
+  const handleCountryChange = (nextCountryCode: string) => {
+    const nextCountry =
+      PHONE_COUNTRIES_BY_CODE.get(nextCountryCode) ?? PHONE_COUNTRIES[0];
+
+    setSelectedCountryCode(nextCountryCode);
+    setClientPhone((currentPhone) => formatPhone(currentPhone, nextCountry));
   };
 
   useEffect(() => {
@@ -335,85 +361,126 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                 </div>
 
                 <form className="space-y-3" onSubmit={onSubmit}>
-                  <input
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
-                    placeholder="Ваше имя"
-                    required
+                  <Input
+                    isRequired
+                    label="Ваше имя"
+                    placeholder="Имя и компания"
                     value={clientName}
-                    onChange={(event) => setClientName(event.target.value)}
+                    onValueChange={setClientName}
                   />
-                  <div className="flex w-full overflow-hidden rounded-lg border border-gray-200 focus-within:border-[#d43e14] focus-within:ring-2 focus-within:ring-[#f99160]/40">
-                    <div className="relative w-[88px] shrink-0 border-r border-gray-200 bg-gray-50">
-                      <div className="pointer-events-none absolute inset-0 flex items-center gap-1 px-3 text-sm text-gray-800">
-                        <span>{selectedCountry.flag}</span>
-                        <span>+{selectedCountry.dialCode}</span>
-                      </div>
-                      <select
-                        className="h-full w-full appearance-none bg-transparent py-2 pl-3 pr-7 text-sm text-transparent outline-none"
-                        aria-label="Код страны"
-                        value={selectedCountryCode}
-                        onChange={(event) => {
-                          const nextCountryCode = event.target.value;
-                          const nextCountry =
-                            PHONE_COUNTRIES_BY_CODE.get(nextCountryCode) ??
-                            PHONE_COUNTRIES[0];
 
-                          setSelectedCountryCode(nextCountryCode);
-                          setClientPhone((currentPhone) =>
-                            formatPhone(currentPhone, nextCountry),
+                  <div className="grid gap-3 grid-cols-[1fr_2fr]">
+                    <Select
+                      disallowEmptySelection
+                      aria-label="Код страны"
+                      label="Страна"
+                      placeholder="Выберите страну"
+                      listboxProps={{ emptyContent: "Нет данных" }}
+                      selectedKeys={[selectedCountryCode]}
+                      renderValue={(items) =>
+                        items.map((item) => {
+                          const country = item.key
+                            ? PHONE_COUNTRIES_BY_CODE.get(String(item.key))
+                            : undefined;
+
+                          if (!country) {
+                            return item.textValue;
+                          }
+
+                          return (
+                            <div
+                              className="flex items-center gap-2"
+                              key={country.code}
+                            >
+                              <img
+                                src={getCountryFlagUrl(country.code)}
+                                alt=""
+                                className="h-[14px] w-[20px] rounded-[2px] border border-gray-200 object-cover"
+                                loading="lazy"
+                              />
+                              <span className="text-sm font-medium text-gray-900">
+                                +{country.dialCode}
+                              </span>
+                            </div>
                           );
-                        }}
-                      >
-                        {SORTED_PHONE_COUNTRIES.map((country) => (
-                          <option key={country.code} value={country.code}>
-                            {country.flag} +{country.dialCode} {country.name}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-                        ▼
-                      </span>
-                    </div>
-                    <input
-                      className="min-w-0 flex-1 px-3 py-2 text-sm outline-none"
+                        })
+                      }
+                      onSelectionChange={(keys) => {
+                        const nextCountryCode = getSelectedCountryCode(
+                          keys as Set<Key> | "all",
+                        );
+
+                        if (nextCountryCode) {
+                          handleCountryChange(nextCountryCode);
+                        }
+                      }}
+                    >
+                      {SORTED_PHONE_COUNTRIES.map((country) => (
+                        <SelectItem
+                          key={country.code}
+                          textValue={`${country.name} +${country.dialCode}`}
+                          startContent={
+                            <img
+                              src={getCountryFlagUrl(country.code)}
+                              alt=""
+                              className="h-[14px] w-[20px] rounded-[2px] border border-gray-200 object-cover"
+                              loading="lazy"
+                            />
+                          }
+                        >
+                          {`${country.name} (+${country.dialCode})`}
+                        </SelectItem>
+                      ))}
+                    </Select>
+
+                    <Input
+                      isRequired
+                      label="Телефон"
                       placeholder="Ваш номер телефона"
                       type="tel"
                       inputMode="tel"
-                      required
                       value={clientPhone}
-                      onChange={(event) =>
-                        setClientPhone(
-                          formatPhone(event.target.value, selectedCountry),
-                        )
+                      onValueChange={(value) =>
+                        setClientPhone(formatPhone(value, selectedCountry))
                       }
                     />
                   </div>
-                  <input
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+
+                  <Input
+                    isRequired
+                    label="Email"
                     placeholder="Ваша почта"
                     type="email"
-                    required
                     value={clientEmail}
-                    onChange={(event) => setClientEmail(event.target.value)}
+                    onValueChange={setClientEmail}
                   />
-                  <textarea
-                    className="min-h-[90px] w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#d43e14] focus:ring-2 focus:ring-[#f99160]/40"
+
+                  <Textarea
+                    label="Комментарий"
+                    minRows={4}
                     placeholder="Ваш комментарий"
                     value={message}
-                    onChange={(event) => setMessage(event.target.value)}
+                    onValueChange={setMessage}
                   />
 
                   <div className="space-y-1 text-xs text-gray-500">
-                    <label className="inline-flex cursor-pointer items-center rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-200">
-                      <input
-                        ref={fileInputRef}
-                        className="sr-only"
-                        type="file"
-                        multiple
-                        onChange={onFilesChange}
-                      />
+                    <input
+                      ref={fileInputRef}
+                      className="sr-only"
+                      type="file"
+                      multiple
+                      onChange={onFilesChange}
+                    />
+                    <Button
+                      type="button"
+                      radius="lg"
+                      size="sm"
+                      variant="flat"
+                      className="bg-gray-100 text-gray-700"
+                      onPress={() => fileInputRef.current?.click()}
+                    >
                       Загрузить ваш макет
-                    </label>
+                    </Button>
                     <div>До {MAX_FILES} файлов, максимум 10 МБ каждый.</div>
                     {files.length > 0 && (
                       <div className="text-xs text-gray-600">
@@ -422,46 +489,36 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                     )}
                   </div>
 
-                  <div className="flex items-start gap-3 rounded-lg border border-gray-200 px-3 py-3 text-sm text-gray-700">
-                    <input
-                      id="personal-data-consent"
-                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-[#d43e14] focus:ring-[#f99160]/50"
-                      type="checkbox"
-                      checked={isPolicyAccepted}
-                      onChange={(event) =>
-                        setIsPolicyAccepted(event.currentTarget.checked)
-                      }
-                      required
-                    />
-                    <span className="min-w-0 text-left leading-6">
-                      <label
-                        htmlFor="personal-data-consent"
-                        className="block cursor-pointer"
-                      >
+                  <div className="rounded-xl border border-gray-200 p-3">
+                    <Switch
+                      isSelected={isPolicyAccepted}
+                      onValueChange={setIsPolicyAccepted}
+                    >
+                      <span className="text-sm font-medium text-gray-800">
                         Согласие на обработку персональных данных{" "}
                         <span className="text-[#d43e14]">*</span>
-                      </label>
-                      <span className="mt-1 block text-sm leading-6 text-gray-600">
-                        Настоящим подтверждаю, что я ознакомлен и согласен с
-                        условиями{" "}
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          className="appearance-none border-0 bg-transparent p-0 font-medium text-[#d43e14] underline decoration-from-font underline-offset-2 transition hover:text-[#1f2937] focus:outline-none"
-                          onClick={() => setIsPolicyModalOpen(true)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              setIsPolicyModalOpen(true);
-                            }
-                          }}
-                          aria-pressed="false"
-                        >
-                          оферты и политики конфиденциальности
-                        </span>
-                        .
                       </span>
-                    </span>
+                    </Switch>
+                    <div className="mt-2 text-xs text-gray-500">
+                      Настоящим подтверждаю, что я ознакомлен и согласен с
+                      условиями{" "}
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="appearance-none border-0 bg-transparent p-0 font-medium text-[#d43e14] underline decoration-from-font underline-offset-2 transition cursor-pointer focus:outline-none"
+                        onClick={() => setIsPolicyModalOpen(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setIsPolicyModalOpen(true);
+                          }
+                        }}
+                        aria-pressed="false"
+                      >
+                        оферты и политики конфиденциальности
+                      </span>
+                      .
+                    </div>
                   </div>
 
                   {error && (
@@ -475,13 +532,16 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                     </div>
                   )}
 
-                  <button
-                    className="w-full rounded-lg bg-gradient-to-r from-[#f99160] to-[#d43e14] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-300"
+                  <Button
+                    fullWidth
+                    color="default"
+                    className="bg-gradient-to-r from-[#f99160] to-[#d43e14] text-white hover:brightness-95"
+                    size="lg"
                     type="submit"
-                    disabled={isSending}
+                    isDisabled={isSending}
                   >
                     {isSending ? "Отправляем..." : "Отправить расчет"}
-                  </button>
+                  </Button>
                 </form>
               </div>
             </>

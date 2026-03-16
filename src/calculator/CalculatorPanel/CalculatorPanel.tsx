@@ -51,7 +51,7 @@ export const CalculatorPanel: FC<CalculatorPanelProps> = ({ priceList }) => {
           reset={reset}
         />
       </div>
-      <div className="w-full md:w-80">
+      <div className="w-full md:w-100">
         <CalculationResultPanel
           result={calculationResult}
           inputSummary={calculationInputSummary}
