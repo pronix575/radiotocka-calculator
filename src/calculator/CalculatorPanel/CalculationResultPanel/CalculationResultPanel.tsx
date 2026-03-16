@@ -13,6 +13,13 @@ import { Card, CardBody } from "@heroui/card";
 import * as Flags from "country-flag-icons/react/3x2";
 import { Divider } from "@heroui/divider";
 import { Input, Textarea } from "@heroui/input";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from "@heroui/modal";
 import { Select, SelectItem } from "@heroui/select";
 import { Switch } from "@heroui/switch";
 import { Tooltip } from "@heroui/tooltip";
@@ -67,9 +74,9 @@ const getSelectedCountryCode = (keys: "all" | Set<Key>) => {
 };
 
 const CountryFlag = ({ countryCode }: { countryCode: string }) => {
-  const FlagComponent = Flags[
-    countryCode as keyof typeof Flags
-  ] as React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined;
+  const FlagComponent = Flags[countryCode as keyof typeof Flags] as
+    | React.ComponentType<React.SVGProps<SVGSVGElement>>
+    | undefined;
 
   if (!FlagComponent) {
     return (
@@ -369,10 +376,10 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
 
           {SHOW_SEND && (
             <>
-              <Divider className="my-2" />
+              <Divider className="-mx-4 mt-0 mb-4 w-auto" />
 
               <div className="space-y-3">
-                <div className="text-sm font-semibold text-gray-800">
+                <div className="text-[16px] font-semibold text-gray-800">
                   Отправить расчет
                 </div>
 
@@ -556,39 +563,17 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
       </Card>
 
       {isPolicyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
-          <button
-            type="button"
-            aria-label="Закрыть политику обработки персональных данных"
-            className="absolute inset-0 cursor-default"
-            onClick={() => setIsPolicyModalOpen(false)}
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="personal-data-policy-title"
-            className="relative z-10 max-h-full w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
-          >
-            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-              <div>
-                <h3
-                  className="text-lg font-semibold text-gray-900"
-                  id="personal-data-policy-title"
-                >
-                  Политика обработки персональных данных
-                </h3>
-              </div>
-              <button
-                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-                type="button"
-                aria-label="Закрыть политику"
-                onClick={() => setIsPolicyModalOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="max-h-[70vh] space-y-5 overflow-y-auto px-5 py-4 text-sm leading-6 text-gray-700">
+        <Modal
+          isOpen={isPolicyModalOpen}
+          size="2xl"
+          scrollBehavior="inside"
+          onOpenChange={setIsPolicyModalOpen}
+        >
+          <ModalContent>
+            <ModalHeader className="text-lg font-semibold text-gray-900">
+              Политика обработки персональных данных
+            </ModalHeader>
+            <ModalBody className="space-y-5 text-sm leading-6 text-gray-700">
               {PERSONAL_DATA_POLICY_SECTIONS.map((section) => (
                 <section className="space-y-2" key={section.title}>
                   <h4 className="font-semibold text-gray-900">
@@ -599,19 +584,18 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                   ))}
                 </section>
               ))}
-            </div>
-
-            <div className="border-t border-gray-200 px-5 py-4">
-              <button
-                className="rounded-lg bg-gradient-to-r from-[#f99160] to-[#d43e14] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95"
-                type="button"
-                onClick={() => setIsPolicyModalOpen(false)}
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                color="default"
+                className="bg-gradient-to-r from-[#f99160] to-[#d43e14] text-white hover:brightness-95"
+                onPress={() => setIsPolicyModalOpen(false)}
               >
                 Закрыть
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       )}
     </>
   );
