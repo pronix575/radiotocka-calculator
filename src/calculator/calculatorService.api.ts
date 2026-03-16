@@ -1,8 +1,53 @@
 import Papa from "papaparse";
 import { PriceGroup, PriceItem, Unit } from "./calculatorService.types";
 
-const SHEET_URL =
+const DEFAULT_SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1hHzLdhoqzpCqOJ15imFSSnJKyxIvD47ASbMAtDsr95w/export?format=csv&gid=0";
+const SHEET_URL_QUERY_PARAM = "sheetUrl";
+
+const getSheetUrlFromLocation = (): string => {
+  if (typeof window === "undefined") {
+    return DEFAULT_SHEET_URL;
+  }
+
+  const sheetUrl = new URLSearchParams(window.location.search).get(
+    SHEET_URL_QUERY_PARAM,
+  );
+
+  if (!sheetUrl) {
+    return DEFAULT_SHEET_URL;
+  }
+
+  return normalizeSheetUrl(sheetUrl);
+};
+
+const normalizeSheetUrl = (rawUrl: string): string => {
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(rawUrl);
+  } catch {
+    throw new Error("Invalid sheetUrl parameter");
+  }
+
+  if (parsedUrl.hostname !== "docs.google.com") {
+    return parsedUrl.toString();
+  }
+
+  const spreadsheetMatch = parsedUrl.pathname.match(
+    /^\/spreadsheets\/d\/([^/]+)/,
+  );
+
+  if (!spreadsheetMatch) {
+    return parsedUrl.toString();
+  }
+
+  const sheetId = spreadsheetMatch[1];
+  const gidFromHash = parsedUrl.hash.match(/gid=(\d+)/)?.[1];
+  const gid = parsedUrl.searchParams.get("gid") ?? gidFromHash ?? "0";
+
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+};
 
 const parseUnit = (unit: string): Unit => {
   switch (unit) {
@@ -28,7 +73,7 @@ const parseOptionalNumber = (value: unknown): number | undefined => {
 };
 
 export const getPriceList = async (): Promise<PriceGroup[]> => {
-  const response = await fetch(SHEET_URL);
+  const response = await fetch(getSheetUrlFromLocation());
 
   if (!response.ok) {
     throw new Error("Failed to fetch price list");

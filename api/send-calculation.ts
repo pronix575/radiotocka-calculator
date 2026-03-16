@@ -26,6 +26,7 @@ type ParsedForm = {
 type SummaryValue = number | string | boolean | null | undefined;
 
 type CalculationEmailProps = {
+  sourcePageUrl: string;
   clientName: string;
   clientPhone: string;
   clientEmail: string;
@@ -185,6 +186,7 @@ const ResultRow = ({ label, value }: { label: string; value: string }) =>
   );
 
 const CalculationEmail = ({
+  sourcePageUrl,
   clientName,
   clientPhone,
   clientEmail,
@@ -197,6 +199,7 @@ const CalculationEmail = ({
   const patternedCuttingEnabled = Boolean(inputSummary.patternedCuttingEnabled);
   const patternedPerimeter = getValue(inputSummary.patternedPerimeter, "");
   const totalPrice = formatMoney(Number(result.totalPrice ?? 0));
+  const emailHeader = getValue(sourcePageUrl, "Radiotochka Calculator");
 
   return createElement(
     Html,
@@ -216,7 +219,7 @@ const CalculationEmail = ({
         createElement(
           Section,
           { style: shell },
-          createElement(Text, { style: eyebrow }, "Radiotochka Calculator"),
+          createElement(Text, { style: eyebrow }, emailHeader),
           createElement(
             Heading,
             { as: "h1", style: title },
@@ -450,6 +453,7 @@ export default async function handler(req: any, res: any) {
     const clientPhone = fields.clientPhone || "—";
     const clientEmail = fields.clientEmail || "—";
     const message = fields.message || "";
+    const sourcePageUrl = fields.sourcePageUrl || "";
     const personalDataConsent =
       fields.personalDataConsent === "accepted" ? "Подтверждено" : "Нет";
 
@@ -464,6 +468,7 @@ export default async function handler(req: any, res: any) {
       to: toEmail,
       subject: subjectParts.join(" — "),
       react: CalculationEmail({
+        sourcePageUrl,
         clientName,
         clientPhone,
         clientEmail,

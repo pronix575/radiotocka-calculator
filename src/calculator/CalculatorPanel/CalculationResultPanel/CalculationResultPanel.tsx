@@ -42,6 +42,14 @@ interface CalculationResultPanelProps {
   inputSummary: CalculationInputSummary | null;
 }
 
+const getEmbedPageUrl = () => {
+  if (typeof document === "undefined") {
+    return "";
+  }
+
+  return document.referrer || window.location.href;
+};
+
 export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
   result,
   inputSummary,
@@ -214,6 +222,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
       formData.append("clientEmail", clientEmail);
       formData.append("message", message);
       formData.append("personalDataConsent", "accepted");
+      formData.append("sourcePageUrl", getEmbedPageUrl());
       files.forEach((file) => formData.append("files", file));
 
       const response = await fetch("/api/send-calculation", {
