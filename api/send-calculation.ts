@@ -28,6 +28,8 @@ type SummaryValue = number | string | boolean | null | undefined;
 
 type CalculationEmailProps = {
   sourcePageUrl: string;
+  sentToEmail?: string;
+  showContactData?: boolean;
   clientName: string;
   clientPhone: string;
   clientEmail: string;
@@ -216,6 +218,8 @@ const ResultRow = ({ label, value }: { label: string; value: string }) =>
 
 const CalculationEmail = ({
   sourcePageUrl,
+  sentToEmail,
+  showContactData = true,
   clientName,
   clientPhone,
   clientEmail,
@@ -266,31 +270,33 @@ const CalculationEmail = ({
             "Расчет стоимости",
           ),
           createElement(Hr, { style: divider }),
-          createElement(
-            Section,
-            { style: block },
-            createElement(
-              Heading,
-              { as: "h2", style: sectionTitle },
-              "Контактные данные",
-            ),
-            createElement(ResultRow, { label: "Имя", value: clientName }),
-            createElement(ResultRow, {
-              label: "Телефон",
-              value: clientPhone,
-            }),
-            createElement(ResultRow, { label: "Email", value: clientEmail }),
-            createElement(ResultRow, {
-              label: "Согласие на обработку персональных данных",
-              value: personalDataConsent,
-            }),
-            message
-              ? createElement(ResultRow, {
-                  label: "Комментарий",
-                  value: message,
-                })
-              : null,
-          ),
+          showContactData
+            ? createElement(
+                Section,
+                { style: block },
+                createElement(
+                  Heading,
+                  { as: "h2", style: sectionTitle },
+                  "Контактные данные",
+                ),
+                createElement(ResultRow, { label: "Имя", value: clientName }),
+                createElement(ResultRow, {
+                  label: "Телефон",
+                  value: clientPhone,
+                }),
+                createElement(ResultRow, { label: "Email", value: clientEmail }),
+                createElement(ResultRow, {
+                  label: "Согласие на обработку персональных данных",
+                  value: personalDataConsent,
+                }),
+                message
+                  ? createElement(ResultRow, {
+                      label: "Комментарий",
+                      value: message,
+                    })
+                  : null,
+              )
+            : null,
           createElement(
             Section,
             { style: block },
@@ -339,6 +345,12 @@ const CalculationEmail = ({
                 ? `${formatNumber(getValue(inputSummary.height))} ${unit}`
                 : "—",
             }),
+            sentToEmail
+              ? createElement(ResultRow, {
+                  label: "Письмо отправлено на",
+                  value: sentToEmail,
+                })
+              : null,
           ),
           createElement(
             Section,
@@ -473,6 +485,7 @@ export default async function handler(req: any, res: any) {
   const resendKey = process.env.RESEND_API_KEY;
   const fromEmailRaw = process.env.RESEND_FROM_EMAIL;
   const toEmail = process.env.RESEND_TO_EMAIL || "copy@9v.ru";
+  const emailSendTo = process.env.EMAIL_SEND_TO || toEmail;
 
   if (!resendKey || !fromEmailRaw) {
     sendJson(res, 500, { error: "Email service is not configured." });
@@ -511,6 +524,7 @@ export default async function handler(req: any, res: any) {
       subject: subjectParts.join(" — "),
       react: CalculationEmail({
         sourcePageUrl,
+        sentToEmail: emailSendTo,
         clientName,
         clientPhone,
         clientEmail,
@@ -530,6 +544,8 @@ export default async function handler(req: any, res: any) {
         subject: subjectParts.join(" — "),
         react: CalculationEmail({
           sourcePageUrl,
+          sentToEmail: emailSendTo,
+          showContactData: false,
           clientName,
           clientPhone,
           clientEmail,
