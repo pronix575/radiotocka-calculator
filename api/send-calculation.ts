@@ -102,13 +102,6 @@ const title = {
   margin: "0 0 10px",
 };
 
-const lead = {
-  color: "#475569",
-  fontSize: "15px",
-  lineHeight: "1.6",
-  margin: "0",
-};
-
 const sectionTitle = {
   fontSize: "16px",
   fontWeight: "700",
