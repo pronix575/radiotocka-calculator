@@ -334,9 +334,13 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                     onChange={(event) => setClientName(event.target.value)}
                   />
                   <div className="flex w-full overflow-hidden rounded-lg border border-gray-200 focus-within:border-[#d43e14] focus-within:ring-2 focus-within:ring-[#f99160]/40">
-                    <div className="relative shrink-0 border-r border-gray-200 bg-gray-50">
+                    <div className="relative w-[88px] shrink-0 border-r border-gray-200 bg-gray-50">
+                      <div className="pointer-events-none absolute inset-0 flex items-center gap-1 px-3 text-sm text-gray-800">
+                        <span>{selectedCountry.flag}</span>
+                        <span>+{selectedCountry.dialCode}</span>
+                      </div>
                       <select
-                        className="h-full appearance-none bg-transparent py-2 pl-3 pr-9 text-sm text-gray-800 outline-none"
+                        className="h-full w-full appearance-none bg-transparent py-2 pl-3 pr-7 text-sm text-transparent outline-none"
                         aria-label="Код страны"
                         value={selectedCountryCode}
                         onChange={(event) => {
@@ -357,7 +361,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                           </option>
                         ))}
                       </select>
-                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                         ▼
                       </span>
                     </div>
