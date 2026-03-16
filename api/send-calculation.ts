@@ -1,7 +1,7 @@
 import Busboy from "busboy";
 import { Resend } from "resend";
 import punycode from "punycode/punycode.js";
-import { formatMoney, formatNumber } from "../shared/formatters";
+import CalculationEmail from "../emails/CalculationEmail.js";
 
 type ParsedForm = {
   fields: Record<string, string>;
@@ -127,77 +127,23 @@ export default async function handler(req: any, res: any) {
 
     const inputSummary = calculation.inputSummary || {};
     const result = calculation.result || {};
-    const patternedCuttingEnabled = Boolean(
-      inputSummary.patternedCuttingEnabled,
-    );
-    const patternedPerimeter = inputSummary.patternedPerimeter || "";
 
     const subjectParts = ["Расчет стоимости"];
     if (clientName && clientName !== "—") subjectParts.push(clientName);
-
-    const html = `
-      <h2>Расчет стоимости</h2>
-      <p><strong>Имя:</strong> ${clientName}</p>
-      <p><strong>Телефон:</strong> ${clientPhone}</p>
-      <p><strong>Email:</strong> ${clientEmail}</p>
-      <p><strong>Согласие на обработку персональных данных:</strong> ${personalDataConsent}</p>
-      ${message ? `<p><strong>Комментарий:</strong> ${message}</p>` : ""}
-      <hr />
-      <h3>Параметры</h3>
-      <ul>
-        <li><strong>Материал:</strong> ${inputSummary.material || "—"}</li>
-        <li><strong>Печать:</strong> ${inputSummary.print || "—"}</li>
-        <li><strong>Резка:</strong> ${inputSummary.cutting || "—"}</li>
-        <li><strong>Узорная резка:</strong> ${
-          patternedCuttingEnabled ? "Да" : "Нет"
-        }</li>
-        ${
-          patternedCuttingEnabled
-            ? `<li><strong>Периметр (узорная):</strong> ${
-                patternedPerimeter ? formatNumber(patternedPerimeter) : "—"
-              } ${inputSummary.unit || "м"}</li>`
-            : ""
-        }
-        <li><strong>Количество:</strong> ${inputSummary.amount ?? "—"}</li>
-        <li><strong>Ширина:</strong> ${
-          inputSummary.width ? formatNumber(inputSummary.width) : "—"
-        } ${
-          inputSummary.unit || "м"
-        }</li>
-        <li><strong>Длина:</strong> ${
-          inputSummary.height ? formatNumber(inputSummary.height) : "—"
-        } ${
-          inputSummary.unit || "м"
-        }</li>
-      </ul>
-      <h3>Результат</h3>
-      <ul>
-        <li><strong>Площадь:</strong> ${formatNumber(
-          Number(result.totalArea ?? 0),
-        )} м²</li>
-        <li><strong>Периметр:</strong> ${formatNumber(
-          Number(result.totalPerimeter ?? 0),
-        )} м</li>
-        <li><strong>Материал:</strong> ${formatMoney(
-          Number(result.materialCost ?? 0),
-        )} ₽</li>
-        <li><strong>Печать:</strong> ${formatMoney(
-          Number(result.printCost ?? 0),
-        )} ₽</li>
-        <li><strong>Резка:</strong> ${formatMoney(
-          Number(result.cuttingCost ?? 0),
-        )} ₽</li>
-        <li><strong>Итого:</strong> ${formatMoney(
-          Number(result.totalPrice ?? 0),
-        )} ₽</li>
-      </ul>
-    `;
 
     await resend.emails.send({
       from: toAsciiEmail(fromEmailRaw),
       to: toEmail,
       subject: subjectParts.join(" — "),
-      html,
+      react: CalculationEmail({
+        clientName,
+        clientPhone,
+        clientEmail,
+        message,
+        personalDataConsent,
+        inputSummary,
+        result,
+      }),
       replyTo: clientEmail !== "—" ? clientEmail : undefined,
       attachments: files,
     });
