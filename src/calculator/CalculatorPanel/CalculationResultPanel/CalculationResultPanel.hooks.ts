@@ -78,7 +78,6 @@ export const useCalculationResultPanel = ({
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [isPolicyAccepted, setIsPolicyAccepted] = useState(false);
-  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSent, setIsSent] = useState(false);
@@ -115,7 +114,6 @@ export const useCalculationResultPanel = ({
   useCloseOnOutsidePointer(isAreaTooltipOpen, areaTooltipButtonRef, () =>
     setIsAreaTooltipOpen(false),
   );
-  useBodyOverflowLock(isPolicyModalOpen);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -210,7 +208,6 @@ export const useCalculationResultPanel = ({
     handleCountryChange,
     isAreaTooltipOpen,
     isPolicyAccepted,
-    isPolicyModalOpen,
     isSending,
     isSent,
     message,
@@ -223,7 +220,6 @@ export const useCalculationResultPanel = ({
     setClientPhone,
     setIsAreaTooltipOpen,
     setIsPolicyAccepted,
-    setIsPolicyModalOpen,
     setMessage,
   };
 };

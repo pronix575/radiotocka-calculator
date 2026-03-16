@@ -4,12 +4,8 @@ import { Divider } from "@heroui/divider";
 import { Tooltip } from "@heroui/tooltip";
 import { QuestionCircleFill } from "react-bootstrap-icons";
 
-import {
-  PERSONAL_DATA_POLICY_SECTIONS,
-  SHOW_SEND,
-} from "./CalculationResultPanel.constants";
+import { SHOW_SEND } from "./CalculationResultPanel.constants";
 import { CalculationResultForm } from "./CalculationResultForm";
-import { PolicyModal } from "./PolicyModal";
 import { useCalculationResultPanel } from "./CalculationResultPanel.hooks";
 import { CalculationResultPanelProps } from "./CalculationResultPanel.types";
 import { formatMoney, formatNumber } from "../../../../shared/formatters";
@@ -29,7 +25,6 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
     handleCountryChange,
     isAreaTooltipOpen,
     isPolicyAccepted,
-    isPolicyModalOpen,
     isSending,
     isSent,
     message,
@@ -42,7 +37,6 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
     setClientPhone,
     setIsAreaTooltipOpen,
     setIsPolicyAccepted,
-    setIsPolicyModalOpen,
     setMessage,
   } = useCalculationResultPanel({
     result,
@@ -138,7 +132,9 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                 isSent={isSent}
                 message={message}
                 onFilesChange={onFilesChange}
-                onOpenPolicy={() => setIsPolicyModalOpen(true)}
+                onOpenPolicy={() =>
+                  window.open("https://9v.ru/page/oferta", "_blank", "noopener,noreferrer")
+                }
                 onSubmit={onSubmit}
                 selectedCountry={selectedCountry}
                 selectedCountryCode={selectedCountryCode}
@@ -149,17 +145,9 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                 setMessage={setMessage}
               />
             </>
-          )}
-        </CardBody>
-      </Card>
-
-      {isPolicyModalOpen && (
-        <PolicyModal
-          isOpen={isPolicyModalOpen}
-          onOpenChange={setIsPolicyModalOpen}
-          sections={PERSONAL_DATA_POLICY_SECTIONS}
-        />
-      )}
+        )}
+      </CardBody>
+    </Card>
     </>
   );
 };

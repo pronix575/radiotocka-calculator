@@ -18,8 +18,12 @@
     input,
     textarea,
     select,
-    button[role="combobox"] {
-      font-size: 16px;
+    button[role="combobox"],
+    [data-slot="input"],
+    [data-slot="input"] input,
+    [data-slot="input"] textarea,
+    [data-slot="trigger"] {
+      font-size: 16px !important;
     }
   }
 }
