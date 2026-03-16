@@ -413,8 +413,9 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                     )}
                   </div>
 
-                  <label className="flex items-start gap-3 rounded-lg border border-gray-200 px-3 py-3 text-sm text-gray-700">
+                  <div className="flex items-start gap-3 rounded-lg border border-gray-200 px-3 py-3 text-sm text-gray-700">
                     <input
+                      id="personal-data-consent"
                       className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-[#d43e14] focus:ring-[#f99160]/50"
                       type="checkbox"
                       checked={isPolicyAccepted}
@@ -424,24 +425,35 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                       required
                     />
                     <span className="min-w-0 text-left leading-6">
-                      Я принимаю{" "}
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        className="appearance-none border-0 bg-transparent p-0 font-medium text-[#d43e14] underline decoration-from-font underline-offset-2 transition hover:text-[#b73512] focus:outline-none"
-                        onClick={() => setIsPolicyModalOpen(true)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            setIsPolicyModalOpen(true);
-                          }
-                        }}
-                        aria-pressed="false"
+                      <label
+                        htmlFor="personal-data-consent"
+                        className="block cursor-pointer"
                       >
-                        политику обработки персональных данных
+                        Согласие на обработку персональных данных{" "}
+                        <span className="text-[#d43e14]">*</span>
+                      </label>
+                      <span className="mt-1 block text-sm leading-6 text-gray-600">
+                        Настоящим подтверждаю, что я ознакомлен и согласен с
+                        условиями{" "}
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          className="appearance-none border-0 bg-transparent p-0 font-medium text-[#d43e14] underline decoration-from-font underline-offset-2 transition hover:text-[#1f2937] focus:outline-none"
+                          onClick={() => setIsPolicyModalOpen(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setIsPolicyModalOpen(true);
+                            }
+                          }}
+                          aria-pressed="false"
+                        >
+                          оферты и политики конфиденциальности
+                        </span>
+                        .
                       </span>
                     </span>
-                  </label>
+                  </div>
 
                   {error && (
                     <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
@@ -490,9 +502,6 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                 >
                   Политика обработки персональных данных
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Редакция для формы отправки расчета на сайте
-                </p>
               </div>
               <button
                 className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
