@@ -1,7 +1,7 @@
 import Busboy from "busboy";
 import { Resend } from "resend";
 import punycode from "punycode/punycode.js";
-import CalculationEmail from "../emails/CalculationEmail.js";
+import CalculationEmail from "./_lib/CalculationEmail.js";
 
 type ParsedForm = {
   fields: Record<string, string>;

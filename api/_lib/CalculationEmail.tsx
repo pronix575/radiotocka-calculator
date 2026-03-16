@@ -9,7 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import { formatMoney, formatNumber } from "../shared/formatters.js";
+import { formatMoney, formatNumber } from "../../shared/formatters.js";
 
 type SummaryValue = number | string | boolean | null | undefined;
 
