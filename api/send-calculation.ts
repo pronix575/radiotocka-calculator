@@ -28,6 +28,7 @@ type SummaryValue = number | string | boolean | null | undefined;
 
 type CalculationEmailProps = {
   sourcePageUrl: string;
+  sourceSiteHost: string;
   sentToEmail?: string;
   showContactData?: boolean;
   clientName: string;
@@ -208,6 +209,22 @@ const formatSourcePageLink = (sourcePageUrl: string) => {
   }
 };
 
+const formatSourceSite = (sourceSiteHost: string, sourcePageUrl: string) => {
+  if (sourceSiteHost) {
+    return punycode.toUnicode(sourceSiteHost);
+  }
+
+  if (!sourcePageUrl) {
+    return "—";
+  }
+
+  try {
+    return punycode.toUnicode(new URL(sourcePageUrl).hostname);
+  } catch {
+    return sourcePageUrl;
+  }
+};
+
 const ResultRow = ({ label, value }: { label: string; value: string }) =>
   createElement(
     Section,
@@ -218,6 +235,7 @@ const ResultRow = ({ label, value }: { label: string; value: string }) =>
 
 const CalculationEmail = ({
   sourcePageUrl,
+  sourceSiteHost,
   sentToEmail,
   showContactData = true,
   clientName,
@@ -233,6 +251,7 @@ const CalculationEmail = ({
   const patternedPerimeter = getValue(inputSummary.patternedPerimeter, "");
   const totalPrice = formatMoney(Number(result.totalPrice ?? 0));
   const sourcePageLink = formatSourcePageLink(sourcePageUrl);
+  const sourceSite = formatSourceSite(sourceSiteHost, sourcePageUrl);
 
   return createElement(
     Html,
@@ -279,6 +298,11 @@ const CalculationEmail = ({
                   { as: "h2", style: sectionTitle },
                   "Контактные данные",
                 ),
+                createElement(ResultRow, { label: "Сайт", value: sourceSite }),
+                createElement(ResultRow, {
+                  label: "Страница",
+                  value: sourcePageLink.href || "—",
+                }),
                 createElement(ResultRow, { label: "Имя", value: clientName }),
                 createElement(ResultRow, {
                   label: "Телефон",
@@ -513,6 +537,7 @@ export default async function handler(req: any, res: any) {
     const clientEmail = fields.clientEmail || "—";
     const message = fields.message || "";
     const sourcePageUrl = fields.sourcePageUrl || "";
+    const sourceSiteHost = fields.sourceSiteHost || "";
     const personalDataConsent =
       fields.personalDataConsent === "accepted" ? "Подтверждено" : "Нет";
 
@@ -528,6 +553,7 @@ export default async function handler(req: any, res: any) {
       subject: subjectParts.join(" — "),
       react: CalculationEmail({
         sourcePageUrl,
+        sourceSiteHost,
         sentToEmail: emailSendTo,
         clientName,
         clientPhone,
@@ -548,6 +574,7 @@ export default async function handler(req: any, res: any) {
         subject: subjectParts.join(" — "),
         react: CalculationEmail({
           sourcePageUrl,
+          sourceSiteHost,
           sentToEmail: emailSendTo,
           showContactData: false,
           clientName,
