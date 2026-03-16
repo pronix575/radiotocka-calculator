@@ -9,6 +9,11 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  .phone-country-popover {
+    width: min(20rem, calc(100vw - 2rem)) !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+
   @media (max-width: 768px) {
     input,
     textarea,

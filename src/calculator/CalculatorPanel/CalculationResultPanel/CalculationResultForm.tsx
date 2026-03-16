@@ -83,6 +83,7 @@ export const CalculationResultForm: FC<CalculationResultFormProps> = ({
           aria-label="Код страны"
           label="Страна"
           placeholder="Выберите страну"
+          popoverProps={{ className: "phone-country-popover" }}
           listboxProps={{ emptyContent: "Нет данных" }}
           selectedKeys={[selectedCountryCode]}
           renderValue={(items) =>
@@ -176,7 +177,9 @@ export const CalculationResultForm: FC<CalculationResultFormProps> = ({
         </Button>
         <div>До {MAX_FILES} файлов, максимум 10 МБ каждый.</div>
         {files.length > 0 && (
-          <div className="text-xs text-gray-600">Выбрано файлов: {files.length}</div>
+          <div className="text-xs text-gray-600">
+            Выбрано файлов: {files.length}
+          </div>
         )}
       </div>
 
