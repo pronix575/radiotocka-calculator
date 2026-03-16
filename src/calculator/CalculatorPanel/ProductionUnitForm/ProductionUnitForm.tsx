@@ -186,6 +186,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
 
   const filteredCuttingItems =
     cuttingGroup?.items.filter((item) => {
+      if (formik.values.patternedCuttingEnabled && item.hideCut) return false;
       if (!selectedMaterial) return true;
       if (!item.lockId?.length) return true;
       return item.lockId.includes(selectedMaterial);
@@ -241,7 +242,7 @@ export const ProductionUnitForm: FC<ProductionUnitFormProps> = ({
     ) {
       formik.setFieldValue("print", "");
     }
-  }, [selectedMaterial]);
+  }, [selectedMaterial, formik.values.patternedCuttingEnabled]);
 
   return (
     <form className="w-full space-y-4">

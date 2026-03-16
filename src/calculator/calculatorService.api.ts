@@ -72,6 +72,17 @@ const parseOptionalNumber = (value: unknown): number | undefined => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+const parseOptionalBoolean = (value: unknown): boolean | undefined => {
+  if (value === null || value === undefined || value === "") return undefined;
+
+  const normalizedValue = String(value).trim().toLowerCase();
+
+  if (["true", "1", "yes", "y"].includes(normalizedValue)) return true;
+  if (["false", "0", "no", "n"].includes(normalizedValue)) return false;
+
+  return undefined;
+};
+
 export const getPriceList = async (): Promise<PriceGroup[]> => {
   const response = await fetch(getSheetUrlFromLocation());
 
@@ -98,6 +109,7 @@ export const getPriceList = async (): Promise<PriceGroup[]> => {
 
     const width = parseOptionalNumber(row.width);
     const height = parseOptionalNumber(row.height);
+    const hideCut = parseOptionalBoolean(row.hideCut);
 
     const item: PriceItem = {
       id: row.id,
@@ -106,6 +118,7 @@ export const getPriceList = async (): Promise<PriceGroup[]> => {
       unit: parseUnit(row.unit),
       lockId,
       ...(row.minCost ? { minCost: Number(row.minCost) } : {}),
+      ...(hideCut !== undefined ? { hideCut } : {}),
       ...(width !== undefined ? { width } : {}),
       ...(height !== undefined ? { height } : {}),
     };

@@ -28,6 +28,7 @@ export interface PriceItem {
   unit: Unit;
   minCost?: number;
   lockId: string[];
+  hideCut?: boolean;
   width?: number;
   height?: number;
 }

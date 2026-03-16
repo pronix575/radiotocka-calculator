@@ -6,6 +6,7 @@ import {
   Heading,
   Hr,
   Html,
+  Link,
   Preview,
   Section,
   Text,
@@ -172,9 +173,37 @@ const footer = {
   margin: "0",
 };
 
+const eyebrowLink = {
+  color: "#475569",
+  textDecoration: "none",
+};
+
 const getValue = (value: SummaryValue, fallback = "—") => {
   if (value === null || value === undefined || value === "") return fallback;
   return String(value);
+};
+
+const formatSourcePageLink = (sourcePageUrl: string) => {
+  if (!sourcePageUrl) {
+    return {
+      href: "",
+      text: "Radiotochka Calculator",
+    };
+  }
+
+  try {
+    const parsedUrl = new URL(sourcePageUrl);
+
+    return {
+      href: parsedUrl.toString(),
+      text: punycode.toUnicode(parsedUrl.hostname),
+    };
+  } catch {
+    return {
+      href: sourcePageUrl,
+      text: sourcePageUrl,
+    };
+  }
 };
 
 const ResultRow = ({ label, value }: { label: string; value: string }) =>
@@ -199,7 +228,7 @@ const CalculationEmail = ({
   const patternedCuttingEnabled = Boolean(inputSummary.patternedCuttingEnabled);
   const patternedPerimeter = getValue(inputSummary.patternedPerimeter, "");
   const totalPrice = formatMoney(Number(result.totalPrice ?? 0));
-  const emailHeader = getValue(sourcePageUrl, "Radiotochka Calculator");
+  const sourcePageLink = formatSourcePageLink(sourcePageUrl);
 
   return createElement(
     Html,
@@ -219,7 +248,18 @@ const CalculationEmail = ({
         createElement(
           Section,
           { style: shell },
-          createElement(Text, { style: eyebrow }, emailHeader),
+          createElement(
+            Text,
+            { style: eyebrow },
+            createElement(
+              Link,
+              {
+                href: sourcePageLink.href,
+                style: eyebrowLink,
+              },
+              sourcePageLink.text,
+            ),
+          ),
           createElement(
             Heading,
             { as: "h1", style: title },
