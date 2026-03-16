@@ -284,7 +284,10 @@ const CalculationEmail = ({
                   label: "Телефон",
                   value: clientPhone,
                 }),
-                createElement(ResultRow, { label: "Email", value: clientEmail }),
+                createElement(ResultRow, {
+                  label: "Email",
+                  value: clientEmail,
+                }),
                 createElement(ResultRow, {
                   label: "Согласие на обработку персональных данных",
                   value: personalDataConsent,
@@ -474,7 +477,8 @@ const toAsciiEmail = (email: string) => {
   return `${local}@${asciiDomain}`;
 };
 
-const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidEmail = (email: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {

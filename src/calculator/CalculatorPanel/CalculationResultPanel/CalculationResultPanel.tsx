@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
+import * as Flags from "country-flag-icons/react/3x2";
 import { Divider } from "@heroui/divider";
 import { Input, Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
@@ -55,9 +56,6 @@ const getEmbedPageUrl = () => {
   return document.referrer || window.location.href;
 };
 
-const getCountryFlagUrl = (countryCode: string) =>
-  `https://flagcdn.com/24x18/${countryCode.toLowerCase()}.png`;
-
 const getSelectedCountryCode = (keys: "all" | Set<Key>) => {
   if (keys === "all") {
     return null;
@@ -66,6 +64,24 @@ const getSelectedCountryCode = (keys: "all" | Set<Key>) => {
   const firstKey = keys.values().next().value;
 
   return firstKey ? String(firstKey) : null;
+};
+
+const CountryFlag = ({ countryCode }: { countryCode: string }) => {
+  const FlagComponent = Flags[
+    countryCode as keyof typeof Flags
+  ] as React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined;
+
+  if (!FlagComponent) {
+    return (
+      <span className="inline-flex h-[14px] w-[20px] items-center justify-center rounded-[2px] border border-gray-200 bg-gray-100 text-[9px] font-semibold text-gray-500">
+        {countryCode}
+      </span>
+    );
+  }
+
+  return (
+    <FlagComponent className="h-[14px] w-[20px] rounded-[2px] border border-gray-200 object-cover" />
+  );
 };
 
 export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
@@ -392,12 +408,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                               className="flex items-center gap-2"
                               key={country.code}
                             >
-                              <img
-                                src={getCountryFlagUrl(country.code)}
-                                alt=""
-                                className="h-[14px] w-[20px] rounded-[2px] border border-gray-200 object-cover"
-                                loading="lazy"
-                              />
+                              <CountryFlag countryCode={country.code} />
                               <span className="text-sm font-medium text-gray-900">
                                 +{country.dialCode}
                               </span>
@@ -420,12 +431,7 @@ export const CalculationResultPanel: FC<CalculationResultPanelProps> = ({
                           key={country.code}
                           textValue={`${country.name} +${country.dialCode}`}
                           startContent={
-                            <img
-                              src={getCountryFlagUrl(country.code)}
-                              alt=""
-                              className="h-[14px] w-[20px] rounded-[2px] border border-gray-200 object-cover"
-                              loading="lazy"
-                            />
+                            <CountryFlag countryCode={country.code} />
                           }
                         >
                           {`${country.name} (+${country.dialCode})`}
